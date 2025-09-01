@@ -1,199 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Project 0 · CS180</title>
-    <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 0 · CS180</title>
+
+  <!-- Set theme before paint (uses same key as main page) -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else {
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        document.documentElement.setAttribute('data-theme', prefersLight ? 'light' : 'dark');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-    <div class="wrap">
-        <nav class="crumbs">
-            <a href="../index.html">← Back to Home</a>
-        </nav>
+  <div class="wrap">
+    <nav class="crumbs">
+      <a href="../index.html">← Back to Home</a>
 
-        <header class="hero">
-            <h1>Project 0: Becoming Friends with Your Camera</h1>
-            <p class="subtitle">Exploring basic photography techniques.</p>
-            <ul class="meta">
-            <li><strong>Course:</strong> CS180</li>
-            <li><strong>Date:</strong> Sep 2025</li>
-            </ul>
-        </header>
+      <!-- theme toggle lives in the nav on the right -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </nav>
 
-        <main class="grid">
+    <header class="hero">
+      <h1>Project 0: Becoming Friends with Your Camera</h1>
+      <p class="subtitle">Exploring basic photography techniques.</p>
+      <ul class="meta">
+        <li><strong>Course:</strong> CS180</li>
+        <li><strong>Date:</strong> Sep 2025</li>
+      </ul>
+    </header>
 
-            <!-- Report A -->
-            <article class="card">
-                <h2>Part 1: Selfie: The Wrong Way vs. The Right Way</h2>
-                <p><strong>Description:</strong> Write a short paragraph describing what these five photos represent (technique, subject, style, etc.).</p>
-                <p><strong>Summary:</strong> Brief takeaway or lesson learned from this set.</p>
-                <div class="gallery" data-group="part1">
-                    <img src="./media/a1.jpg" alt="Part 1 image 1" />
-                    <img src="./media/a2.jpg" alt="Part 1 image 2" />
-                    <img src="./media/a3.jpg" alt="Part 1 image 3" />
-                    <img src="./media/a4.jpg" alt="Part 1 image 4" />
-                    <img src="./media/a5.jpg" alt="Part 1 image 5" />
-                </div>
-            </article>
+    <main class="grid">
 
-            <!-- Report B -->
-            <article class="card">
-                <h2>Part 2: Architectural Perspective Compression</h2>
-                <p><strong>Description:</strong> Write a short description of the focus of these two images.</p>
-                <p><strong>Summary:</strong> One or two sentences on the insights gained.</p>
-                <div class="gallery" data-group="part2">
-                    <img src="./media/b1.jpg" alt="Part 2 image 1" />
-                    <img src="./media/b2.jpg" alt="Part 2 image 2" />
-                </div>
-            </article>
+      <!-- Part 1 -->
+      <article class="card">
+        <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
+        <p><strong>Description:</strong> Write a short paragraph describing what these five photos represent (technique, subject, style, etc.).</p>
+        <p><strong>Summary:</strong> Brief takeaway or lesson learned from this set.</p>
+        <div class="gallery" data-group="part1">
+          <img src="./media/a1.jpg" alt="Part 1 image 1" />
+          <img src="./media/a2.jpg" alt="Part 1 image 2" />
+          <img src="./media/a3.jpg" alt="Part 1 image 3" />
+          <img src="./media/a4.jpg" alt="Part 1 image 4" />
+          <img src="./media/a5.jpg" alt="Part 1 image 5" />
+        </div>
+      </article>
 
-            <!-- Report C -->
-            <article class="card">
-                <h2>Part 3: The Dolly Zoom</h2>
-                <p><strong>Description:</strong> Short explanation of what the animation demonstrates.</p>
-                <p><strong>Summary:</strong> What you learned or observed from creating this gif.</p>
-                <figure class="media" data-group="part3">
-                    <img src="./media/c1.gif" alt="Part 3 gif" />
-                    <figcaption>Figure: Animated demonstration.</figcaption>
-                </figure>
-            </article>
+      <!-- Part 2 -->
+      <article class="card">
+        <h2>Part 2: Architectural Perspective Compression</h2>
+        <p><strong>Description:</strong> Write a short description of the focus of these two images.</p>
+        <p><strong>Summary:</strong> One or two sentences on the insights gained.</p>
+        <div class="gallery" data-group="part2">
+          <img src="./media/b1.jpg" alt="Part 2 image 1" />
+          <img src="./media/b2.jpg" alt="Part 2 image 2" />
+        </div>
+      </article>
 
-            <!-- Resources -->
-            <article class="card">
-                <h2>Links</h2>
-                <ul>
-                    <li><a href="https://cal-cs180.github.io/fa25/hw/proj0/index.html">Project Description</a></li>
-                    <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
-                    <li><a href="../index.html">Home</a></li>
-                </ul>
-            </article>
-        </main>
+      <!-- Part 3 -->
+      <article class="card">
+        <h2>Part 3: The Dolly Zoom</h2>
+        <p><strong>Description:</strong> Short explanation of what the animation demonstrates.</p>
+        <p><strong>Summary:</strong> What you learned or observed from creating this gif.</p>
+        <figure class="media" data-group="part3">
+          <img src="./media/c1.gif" alt="Part 3 gif" />
+          <figcaption>Figure: Animated demonstration.</figcaption>
+        </figure>
+      </article>
 
-        <footer class="foot">
-            © <span id="y"></span> Karen Shieh — CS180
-        </footer>
-    </div>
-    <!-- Lightbox modal -->
+      <!-- Resources -->
+      <article class="card">
+        <h2>Resources</h2>
+        <ul>
+          <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="../index.html">Home</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Lightbox modal (unchanged) -->
     <div id="lightbox" class="lb" aria-hidden="true">
-        <button class="lb-close" aria-label="Close">×</button>
-        <button class="lb-prev" aria-label="Previous">‹</button>
-        <img class="lb-img" alt="" />
-        <div class="lb-cap" role="note"></div>
-        <button class="lb-next" aria-label="Next">›</button>
+      <button class="lb-close" aria-label="Close">×</button>
+      <button class="lb-prev" aria-label="Previous">‹</button>
+      <img class="lb-img" alt="" />
+      <div class="lb-cap" role="note"></div>
+      <button class="lb-next" aria-label="Next">›</button>
     </div>
-    <script>
-        (() => {
-        const modal = document.getElementById('lightbox');
-        const imgEl = modal.querySelector('.lb-img');
-        const capEl = modal.querySelector('.lb-cap');
-        const btnPrev = modal.querySelector('.lb-prev');
-        const btnNext = modal.querySelector('.lb-next');
-        const btnClose = modal.querySelector('.lb-close');
 
-        // Build groups from containers that declare data-group
-        const groups = {};
-        document.querySelectorAll('.gallery[data-group], .media[data-group]').forEach(container => {
-            const groupName = container.dataset.group;
-            const items = Array.from(container.querySelectorAll('img'));
-            groups[groupName] = items;
-            // tag each img with its group/index + click
-            items.forEach((img, idx) => {
-            img.dataset.group = groupName;
-            img.dataset.index = idx;
-            img.addEventListener('click', openFromThumb);
-            });
-        });
+    <footer class="foot">
+      © <span id="y"></span> Karen Shieh — CS180
+    </footer>
+  </div>
 
-        let currentGroup = null;
-        let currentIndex = 0;
-        let prevFocus = null;
+  <!-- Lightbox JS (unchanged) -->
+  <script>
+  (() => {
+    const modal = document.getElementById('lightbox');
+    const imgEl = modal.querySelector('.lb-img');
+    const capEl = modal.querySelector('.lb-cap');
+    const btnPrev = modal.querySelector('.lb-prev');
+    const btnNext = modal.querySelector('.lb-next');
+    const btnClose = modal.querySelector('.lb-close');
 
-        function openFromThumb(e) {
-            const t = e.currentTarget;
-            currentGroup = t.dataset.group;
-            currentIndex = parseInt(t.dataset.index, 10);
-            openLightbox();
-        }
+    const groups = {};
+    document.querySelectorAll('.gallery[data-group], .media[data-group]').forEach(container => {
+      const groupName = container.dataset.group;
+      const items = Array.from(container.querySelectorAll('img'));
+      groups[groupName] = items;
+      items.forEach((img, idx) => {
+        img.dataset.group = groupName;
+        img.dataset.index = idx;
+        img.addEventListener('click', openFromThumb);
+      });
+    });
 
-        function openLightbox() {
-            const list = groups[currentGroup];
-            if (!list || !list.length) return;
-            const node = list[currentIndex];
-            show(node.src, node.alt || '');
+    let currentGroup = null;
+    let currentIndex = 0;
+    let prevFocus = null;
 
-            // lock scroll + a11y
-            prevFocus = document.activeElement;
-            document.body.style.overflow = 'hidden';
-            modal.setAttribute('aria-hidden','false');
-            btnClose.focus();
-            addListeners(true);
-        }
+    function openFromThumb(e) {
+      const t = e.currentTarget;
+      currentGroup = t.dataset.group;
+      currentIndex = parseInt(t.dataset.index, 10);
+      openLightbox();
+    }
+    function openLightbox() {
+      const list = groups[currentGroup];
+      if (!list || !list.length) return;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+      prevFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      modal.setAttribute('aria-hidden','false');
+      btnClose.focus();
+      addListeners(true);
+    }
+    function closeLightbox() {
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      addListeners(false);
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function show(src, alt) { imgEl.src = src; imgEl.alt = alt; capEl.textContent = alt; }
+    function next() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex + 1) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function prev() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function onKey(e) {
+      if (modal.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    }
+    function onBackdropClick(e) { if (e.target === modal) closeLightbox(); }
+    let x0 = null;
+    function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
+    function onTouchEnd(e){
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+      x0 = null;
+    }
+    function addListeners(on) {
+      const method = on ? 'addEventListener' : 'removeEventListener';
+      document[method]('keydown', onKey);
+      modal[method]('click', onBackdropClick);
+      imgEl[method]('touchstart', onTouchStart, {passive:true});
+      imgEl[method]('touchend', onTouchEnd, {passive:true});
+    }
+    btnClose.addEventListener('click', closeLightbox);
+    btnNext.addEventListener('click', next);
+    btnPrev.addEventListener('click', prev);
+  })();
+  </script>
 
-        function closeLightbox() {
-            modal.setAttribute('aria-hidden','true');
-            document.body.style.overflow = '';
-            addListeners(false);
-            if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
-        }
-
-        function show(src, alt) {
-            imgEl.src = src;
-            imgEl.alt = alt;
-            capEl.textContent = alt;
-        }
-
-        function next() {
-            const list = groups[currentGroup];
-            currentIndex = (currentIndex + 1) % list.length;
-            const node = list[currentIndex];
-            show(node.src, node.alt || '');
-        }
-
-        function prev() {
-            const list = groups[currentGroup];
-            currentIndex = (currentIndex - 1 + list.length) % list.length;
-            const node = list[currentIndex];
-            show(node.src, node.alt || '');
-        }
-
-        function onKey(e) {
-            if (modal.getAttribute('aria-hidden') === 'true') return;
-            if (e.key === 'Escape') closeLightbox();
-            else if (e.key === 'ArrowRight') next();
-            else if (e.key === 'ArrowLeft') prev();
-        }
-
-        // click-outside to close
-        function onBackdropClick(e) {
-            if (e.target === modal) closeLightbox();
-        }
-
-        // basic touch swipe
-        let x0 = null;
-        function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
-        function onTouchEnd(e){
-            if (x0 == null) return;
-            const dx = e.changedTouches[0].clientX - x0;
-            if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
-            x0 = null;
-        }
-
-        function addListeners(on) {
-            const method = on ? 'addEventListener' : 'removeEventListener';
-            document[method]('keydown', onKey);
-            modal[method]('click', onBackdropClick);
-            imgEl[method]('touchstart', onTouchStart, {passive:true});
-            imgEl[method]('touchend', onTouchEnd, {passive:true});
-        }
-
-        btnClose.addEventListener('click', closeLightbox);
-        btnNext.addEventListener('click', next);
-        btnPrev.addEventListener('click', prev);
-        })();
-
-
-        document.getElementById('y').textContent=new Date().getFullYear()
-    </script>
+  <!-- Year + theme toggle logic -->
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    function syncButton(){
+      const mode = root.getAttribute('data-theme');
+      if (mode === 'light') { icon.textContent = '🌞'; label.textContent = 'Light'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark'; }
+    }
+    syncButton();
+    btn.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncButton();
+    });
+  </script>
 </body>
 </html>

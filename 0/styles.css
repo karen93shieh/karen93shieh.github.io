@@ -2,23 +2,27 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --line:#1f2937; --accent:#8b5cf6;
 }
-/* Light mode overrides */
-html[data-theme="light"]{
+
+/* Light mode overrides (same selector used on root page) */
+[data-theme="light"]{
   --bg:#f7fafc; --card:#ffffff; --ink:#0f172a; --muted:#4b5563; --line:#e5e7eb; --accent:#7c3aed;
 }
 
 *{box-sizing:border-box}
-body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:linear-gradient(180deg,var(--bg),var(--card));color:var(--ink)}
+body{
+  margin:0;
+  font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+  background:linear-gradient(180deg,var(--bg),var(--card));
+  color:var(--ink);
+}
 .wrap{max-width:980px;margin:48px auto;padding:0 20px}
 
 /* crumbs + toggle */
-.crumbs{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;
-}
+.crumbs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .crumbs a{color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:10px}
 .crumbs a:hover{border-color:var(--accent)}
 
-/* Theme toggle button (same look as main page) */
+/* Theme toggle button */
 .theme-toggle{
   border:1px solid var(--line);
   background:var(--card);
@@ -32,49 +36,28 @@ body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
 .theme-toggle:hover{border-color:var(--accent)}
 .theme-icon{font-size:16px;line-height:1}
 
+/* Your existing rules (unchanged) */
 .hero h1{margin:.4rem 0 0;font-size:2rem}
 .subtitle{margin:.25rem 0 1rem;color:var(--muted)}
 .meta{list-style:none;padding:0;margin:0 0 22px 0;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
-
-/* Stack cards vertically */
 .grid{display:flex;flex-direction:column;gap:24px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
 .card h2{margin-top:0}
-
 .media{margin:0}
 .media img{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
-
-/* Gallery layout */
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .gallery img{width:100%;border-radius:10px;border:1px solid var(--line)}
-/* Clickable pointer (not zoom-in) */
 .gallery img, .media img { cursor: pointer; }
-
 .foot{margin:28px 0;color:var(--muted);font-size:14px;text-align:center}
 a{color:#c4b5fd}
 
-/* ==== Lightbox ==== */
+/* Lightbox (your existing styles)… */
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;place-items:center;z-index:9999}
 .lb[aria-hidden="false"]{display:grid}
 .lb-img{max-width:92vw;max-height:88vh;border-radius:12px;border:1px solid rgba(255,255,255,.15);box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .lb-cap{margin-top:12px;color:#e5e7eb;text-align:center;max-width:92vw;font-size:14px}
-
-.lb-close,.lb-prev,.lb-next{
-  position:absolute;border:none;background:transparent;color:#e5e7eb;
-  font-size:32px;line-height:1;cursor:pointer;opacity:.9;transition:opacity .15s ease
-}
+.lb-close,.lb-prev,.lb-next{position:absolute;border:none;background:transparent;color:#e5e7eb;font-size:32px;line-height:1;cursor:pointer;opacity:.9;transition:opacity .15s ease}
 .lb-close{top:16px;right:20px;font-size:36px}
 .lb-prev{left:18px;top:50%;transform:translateY(-50%)}
 .lb-next{right:18px;top:50%;transform:translateY(-50%)}
 .lb-close:hover,.lb-prev:hover,.lb-next:hover{opacity:1}
-
-
-/* Light theme overrides (soft yellow) */
-/*html[data-theme="light"] {
-/*  --bg: #fffbea;        /* pale warm background */
-/*  --card: #fff8dc;      /* light card (cornsilk tone) */
-/*  --ink: #3a2f0b;       /* dark brown text instead of pure black */
-/*  --muted: #7c6f57;     /* softer muted text */
-/*  --line: #e5dec6;      /* gentle border */
-/*  --accent: #d97706;    /* warm amber accent */
-/*}

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 1 · CS180</title>
+
+  <!-- Pre-paint theme (same key/logic as other pages) -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme');
+        const initial = (saved === 'light' || saved === 'dark')
+          ? saved
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', initial);
+      } catch { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="./styles.css?v=1" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="crumbs">
+      <a href="../index.html">← Back to Home</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </nav>
+
+    <header class="hero">
+      <h1>Project 1: Colorizing the Prokudin-Gorskii Photo Collection</h1>
+      <p class="subtitle">The reconstruction of Sergei Prokudin-Gorskii's early 20th-century color photographs.</p>
+      <ul class="meta">
+        <!-- <li><strong>Course:</strong> CS180</li> -->
+        <li><strong>Date:</strong> Sep 2025</li>
+      </ul>
+    </header>
+
+    <main class="grid">
+
+      <section class="summary">
+        <h2>Project Overview</h2>
+        <p>
+            This project explores early computational photography technique through the work of Sergei Prokudin-Gorskii, 
+            who captured scenes of the Russian Empire on glass plates using three separate color filters (blue, green, red).
+        </p>
+        <p>
+            The task is to take these digitized plates, split them into the three color channles, and then realign them such that they form a signle color photographs.
+            I started with a simple exhaustive search over small displacements, using normazlied cross-correlation (NCC) to score alignments. 
+        </p>
+        <p>
+            Because the full-resolution .tif scans are very large, I extended the approach with an image pyramid: 
+            the scans were recursively downsampled and aligned to estimate shifts efficiently.
+            This allowed efficient and accurate reconstructions even for high-resolution plates.  
+        </p>
+
+        <p>
+          To further improve alignment, I also experimented with Sobel edge detection, which uses structural boundaries in the image while reducing sensitivity to brightness differences across channels. 
+          Using edges instead of raw intensities makes the NCC metric more robust on challenging images with strong illumination changes.
+        </p>
+        <p>
+          The end result is a pipeline that can automatically transform Prokudin-Gorskii’s raw glass plates into color images, recreating how his subjects might have originally appeared.
+        </p>
+        <p>
+          Note: Personally I like the images without the borders cropped, as it showed the nature of this project :) 
+        </p>
+      </section>
+
+      <!-- Section A -->
+      <article class="card">
+        <h2>Section A — Naive Approach</h2>
+        <p>
+            <strong>Context:</strong> 
+            For the smaller files such as cathedral.jpg, using a naive approach of searching for alignment over a large radius is computationally acceptable 
+            (as the image is smaller, and the displacement is not too large).
+            The score is computed by taking the NCC, and the best result is returned. 
+        </p>
+        <p>
+            <strong>Notes:</strong> 
+            The image is preprocessed such that the margins (10% of each sub-image) are cut off. 
+            This is becasue the margin has these black and white pixels that could dominate the the NCC score calculation and interfere with the alignment.
+            The default radius is set to 15, and with no downsampling. 
+        </p>
+        
+        <div class="gallery" data-group="sA">
+          <figure>
+            <img src="./media/cathedral_png.png" alt="cathedral.png" />
+            <figcaption> cathedral.png <br> B: (x = 2, y = 5)<br> R: (x = 3, y = 12)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/monastery_png.png" alt="monastery.png" />
+            <figcaption>monastery.png <br> B: (x = 2, y = -3)<br> R: (x = 2, y = 3)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/tobolsk_png.png" alt="tobolsk.png" />
+            <figcaption>tobolsk.png <br> B: (x = 3, y = 3)<br> R: (x = 3, y = 6)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- Section B -->
+      <article class="card">
+        <h2>Section B — Image Pyramid</h2>
+        <p>
+          <strong>Context:</strong> 
+          To handle the large .tif scans efficiently, I implemented an image pyramid. 
+          Each channel was recursively downsampled by a factor of two until the smallest dimension reached a set minimum size. 
+          At the coarsest level, alignment was performed using normalized cross-correlation (NCC) over a fixed displacement window. 
+          Before computing NCC, each image was min–max normalized to the [0,1] range so that differences in overall brightness or exposure between channels would not bias the similarity measure. 
+          The best offset found at the coarsest level was then scaled back up (multiplied by two at each step) and propagated upward to full resolution.
+        </p>
+        <p>
+            <strong>Notes:</strong> 
+            I aligned r, b to g, instead of r, g to b. 
+            For some reason, when I tried aligning r, g to b, the offset is incorrect. 
+        </p>
+        
+        <div class="gallery" data-group="sB">
+          <figure>
+            <img src="./media/cathedral_pyramid.png" alt="cathedral.jpg" />
+            <figcaption>cathedral.jpg <br> B: (x = -2, y = -5)<br> R: (x = 1, y = 7)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/church_pyramid.png" alt="church.tif" />
+            <figcaption>church.tif <br> B: (x = -4, y = -25)<br> R: (x = -8, y = 33)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/emir_pyramid.png" alt="emir.tif" />
+            <figcaption>emir.tif <br> B: (x = -24, y = -49)<br> R: (x = 17, y = 57)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/harvesters_pyramid.png" alt="harvesters.tif" />
+            <figcaption>harvesters.tif <br> B: (x = -16, y = -59)<br> R: (x = -3, y = 65)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/icon_pyramid.png" alt="icon.tif" />
+            <figcaption>icon.tif <br> B: (x = -14, y = -41)<br> R: (x = 5, y = 48)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/italil_pyramid.png" alt="italil.tif" />
+            <figcaption>italil.tif <br> B: (x = -21, y = -38)<br> R: (x = 15, y = 38)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/lastochikino_pyramid.png" alt="lastochikino.tif" />
+            <figcaption>lastochikino.tif <br> B: (x = 2, y = 2)<br> R: (x = -7, y = 78)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/lugano_pyramid.png" alt="lugano.tif" />
+            <figcaption>lugano.tif <br> B: (x = 16, y = -41)<br> R: (x = -13, y = 52)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/melons_pyramid.png" alt="melons.tif" />
+            <figcaption>melons.tif <br> B: (x = -10, y = -81)<br> R: (x = 3, y = 96)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/monastery_pyramid.png" alt="monastery.jpg" />
+            <figcaption>monastery.jpg <br> B: (x = -2, y = 3)<br> R: (x = 1, y = 6)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/self_portrait_pyramid.png" alt="self_portrait.tif" />
+            <figcaption>self_portrait.tif <br> B: (x = -29, y = -78)<br> R: (x = 8, y = 98)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/siren_pyramid.png" alt="siren.tif" />
+            <figcaption>siren.tif <br> B: (x = 6, y = -49)<br> R: (x = -18, y = 47)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/three_generations_pyramid.png" alt="three_generations.tif" />
+            <figcaption>three_generations.tif <br> B: (x = -14, y = -53)<br> R: (x = -3, y = 58)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/tobolsk_pyramid.png" alt="tobolsk.jpg" />
+            <figcaption>tobolsk.jpg <br> B: (x = -3, y = -3)<br> R: (x = 1, y = 4)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- Section C -->
+      <article class="card">
+        <h2>Section C — Bells and Whistles</a></h2>
+        <p>
+          <strong>Context:</strong> 
+          As an extension (“bells and whistles”), I incorporated Sobel edge detection into the alignment pipeline. 
+          Instead of comparing raw intensity values across channels, I applied the Sobel operator to emphasize edges and structural boundaries. 
+          This approach reduces sensitivity to lighting and exposure differences between the color channels, since edges remain consistent even when brightness varies. 
+          Using edge maps with normalized cross-correlation often produced sharper and more stable alignments, particularly for images with strong contrast or uneven illumination.
+        </p>
+        <p>
+            <strong>Notes:</strong> 
+            Some chosen images (although the differences is not huge). 
+        </p>
+        <div class="gallery" data-group="sC">
+          <figure>
+            <img src="./media/emir_sobel.png" alt="emir.tif" />
+            <figcaption>emir.tif <br> B: (x = -24, y = -49)<br> R: (x = 17, y = 58)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/harvesters_sobel.png" alt="harvesters.tif" />
+            <figcaption>harvesters.tif <br> B: (x = -17, y = -60)<br> R: (x = -3, y = 64)</figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/icon_sobel.png" alt="icon.tif" />
+            <figcaption>icon.tif <br> B: (x = -17, y = -42)<br> R: (x = 5, y = 48)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+
+      <!-- Section D -->
+      <article class="card">
+        <h2>Section D — Examples from the <a href="https://www.loc.gov/collections/prokudin-gorskii/?st=grid"  target="_blank" rel="noopener">Prokudin-Gorskii collection</a></h2>
+        <p><strong>Context:</strong> Some images I like ♥</p>
+        <div class="gallery" data-group="sC">
+          <figure>
+            <img src="./media/ex_1_sobel.png" alt="ex_1" />
+            <figcaption>
+              <a href="https://www.loc.gov/resource/ppem.01333/" target="_blank" rel="noopener noreferrer">Crumbling mosque</a> <br>
+              B: (x = -9, y = -27)<br> R: (x = 1, y = 44)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/ex_2_sobel.png" alt="ex_2" />
+            <figcaption>
+              <a href="https://www.loc.gov/item/2018679177/" target="_blank" rel="noopener noreferrer">Kivach waterfall</a> <br>
+              B: (x = -17, y = -17)<br> R: (x = 13, y = 71)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/ex_3_sobel.png" alt="ex_3" />
+            <figcaption>
+              <a href="https://www.loc.gov/item/2018679269/" target="_blank" rel="noopener noreferrer">Railroad construction participants</a> <br>
+              B: (x = 14, y = -34)<br> R: (x = -12, y = 87)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/ex_4_sobel.png" alt="ex_4" />
+            <figcaption>
+              <a href="https://www.loc.gov/item/2018681186/" target="_blank" rel="noopener noreferrer">Cotton textile mill</a> <br>
+              B: (x = -16, y = -52)<br> R: (x = 4, y = 54)
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="./media/ex_5_sobel.png" alt="ex_5" />
+            <figcaption>
+              <a href="https://www.loc.gov/item/2018679978/" target="_blank" rel="noopener noreferrer">Gorki</a> <br>
+              B: (x = -30, y = -51)<br> R: (x = 13, y = 58)
+            </figcaption>
+          </figure>
+        </div>
+      </article>
+
+
+      <!-- Appendix -->
+      <article class="card">
+        <h2>Appendix</a></h2>
+        <p>
+          <strong>Context:</strong> 
+          This is the example of what happens when I tried to align r, g to b     
+        </p>
+        <div class="gallery" data-group="sC">
+          <figure>
+            <img src="./media/emir_error.png" alt="emir.tif" />
+            <figcaption>emir.tif <br> G: (x = 24, y = 49)<br> R: (x = -249, y = 95)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+
+
+      <!-- Resources -->
+      <article class="card">
+        <h2>Resources</h2>
+        <ul>
+          <li><a href="https://cal-cs180.github.io/fa25/hw/proj1/index.html" target="_blank" rel="noopener">Project Description</a></li>
+          <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="../index.html">Home</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Lightbox modal -->
+    <div id="lightbox" class="lb" aria-hidden="true">
+      <button class="lb-close" aria-label="Close">×</button>
+      <button class="lb-prev" aria-label="Previous">‹</button>
+      <img class="lb-img" alt="" />
+      <div class="lb-cap" role="note"></div>
+      <button class="lb-next" aria-label="Next">›</button>
+    </div>
+
+    <footer class="foot">
+      © <span id="y"></span> Karen Shieh — CS180
+    </footer>
+  </div>
+
+  <!-- Lightbox JS -->
+  <script>
+  (() => {
+    const modal = document.getElementById('lightbox');
+    const imgEl = modal.querySelector('.lb-img');
+    const capEl = modal.querySelector('.lb-cap');
+    const btnPrev = modal.querySelector('.lb-prev');
+    const btnNext = modal.querySelector('.lb-next');
+    const btnClose = modal.querySelector('.lb-close');
+
+    const groups = {};
+    document.querySelectorAll('.gallery[data-group]').forEach(container => {
+      const groupName = container.dataset.group;
+      const items = Array.from(container.querySelectorAll('img'));
+      groups[groupName] = items;
+      items.forEach((img, idx) => {
+        img.dataset.group = groupName;
+        img.dataset.index = idx;
+        img.addEventListener('click', (e) => {
+          const t = e.currentTarget;
+          currentGroup = t.dataset.group;
+          currentIndex = parseInt(t.dataset.index, 10);
+          openLightbox();
+        });
+      });
+    });
+
+    let currentGroup = null;
+    let currentIndex = 0;
+    let prevFocus = null;
+
+    function openLightbox() {
+      const list = groups[currentGroup];
+      if (!list || !list.length) return;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+      prevFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      modal.setAttribute('aria-hidden','false');
+      btnClose.focus();
+      addListeners(true);
+    }
+    function closeLightbox() {
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      addListeners(false);
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function show(src, alt) { imgEl.src = src; imgEl.alt = alt; capEl.textContent = alt; }
+    function next() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex + 1) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function prev() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function onKey(e) {
+      if (modal.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    }
+    function onBackdropClick(e) { if (e.target === modal) closeLightbox(); }
+    let x0 = null;
+    function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
+    function onTouchEnd(e){
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+      x0 = null;
+    }
+    function addListeners(on) {
+      const m = on ? 'addEventListener' : 'removeEventListener';
+      document[m]('keydown', onKey);
+      modal[m]('click', onBackdropClick);
+      imgEl[m]('touchstart', onTouchStart, {passive:true});
+      imgEl[m]('touchend', onTouchEnd, {passive:true});
+    }
+    btnClose.addEventListener('click', closeLightbox);
+    btnNext.addEventListener('click', next);
+    btnPrev.addEventListener('click', prev);
+  })();
+  </script>
+
+  <!-- Year + Theme toggle -->
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    function syncButton(){
+      const mode = root.getAttribute('data-theme');
+      if (mode === 'light') { icon.textContent = '🌞'; label.textContent = 'Light'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark'; }
+    }
+    syncButton();
+    btn.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncButton();
+    });
+  </script>
+</body>
+</html>

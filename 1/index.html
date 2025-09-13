@@ -32,7 +32,11 @@
 
     <header class="hero">
       <h1>Project 1: Colorizing the Prokudin-Gorskii Photo Collection</h1>
-      <p class="subtitle">The reconstruction of Sergei Prokudin-Gorskii's early 20th-century color photographs.</p>
+      <p class="subtitle">
+        The reconstruction of Sergei Prokudin-Gorskii's early 20th-century color photographs. <br>
+        Author's note: Personally I like the images without the borders cropped, as it showed the nature of this project  °˖✧◝(⁰▿⁰)◜✧˖°
+
+      </p>
       <ul class="meta">
         <!-- <li><strong>Course:</strong> CS180</li> -->
         <li><strong>Date:</strong> Sep 2025</li>
@@ -65,25 +69,100 @@
           The end result is a pipeline that can automatically transform Prokudin-Gorskii’s raw glass plates into color images, recreating how his subjects might have originally appeared.
         </p>
         <p>
-          Note: Personally I like the images without the borders cropped, as it showed the nature of this project  °˖✧◝(⁰▿⁰)◜✧˖°
+          <strong>Note:</strong> Click on the image to zoom in.
         </p>
       </section>
 
       <!-- Section A -->
       <article class="card">
         <h2>Section A — Naive Approach</h2>
-        <p>
+        <!-- <p>
             <strong>Context:</strong> 
             For the smaller files such as cathedral.jpg, using a naive approach of searching for alignment over a large radius is computationally acceptable 
             (as the image is smaller, and the displacement is not too large).
             The score is computed by taking the NCC, and the best result is returned. 
+        </p> -->
+        <!-- <p>
+          The naive simple single-scale algorithm is the most straightforward way to align the color channels.
+          It assumes the images are not too large and the misalignments are small enough to be captured by
+          an exhaustive local search.
         </p>
+
         <p>
+          <strong>Step 1 — Cropping:</strong>
+          Before searching, each channel has its borders trimmed (about 10%). These margins often contain
+          black or white bands from the glass plates, which could mislead the alignment score if kept.
+        </p>
+
+        <p>
+          <strong>Step 2 — Similarity metric:</strong>
+          Alignment quality is measured with normalized cross-correlation (NCC). This metric compares
+          patterns of brightness and contrast, while normalizing away overall intensity differences between channels.
+        </p>
+
+        <p>
+          <strong>Step 3 — Search:</strong>
+          For each possible shift within a fixed radius (±15 pixels in both directions by default),
+          the moving channel is shifted and scored against the reference channel using NCC.
+          The offset that yields the highest NCC is chosen as the best alignment.
+        </p>
+
+        <p>
+          <strong>Step 4 — Reconstruct:</strong>
+          Once the best offsets are found, the shifted Green and Red channels are stacked with the Blue channel
+          to reconstruct the final color image.
+        </p>
+
+        <p>
+          This method is simple and effective on smaller files like <code>cathedral.jpg</code> or
+          <code>monastery.jpg</code>, where shifts are small and computation is fast. However,
+          because it only searches a limited window and at one resolution,
+          it can fail on the large <code>.tif</code> scans where misalignments are much larger.
+        </p> -->
+        <!-- <p>
             <strong>Notes:</strong> 
             The image is preprocessed such that the margins (10% of each sub-image) are cut off. 
             This is becasue the margin has these black and white pixels that could dominate the the NCC score calculation and interfere with the alignment.
             The default radius is set to 15, and with no downsampling. 
-        </p>
+        </p> -->
+
+          <p>
+            The naive single-scale method aligns color channels using a single-resolution, local search.
+            It assumes the true displacement is small enough to be found by testing a limited window of
+            integer pixel shifts around zero.
+          </p>
+
+          <p>
+            <strong>Intuition:</strong> Treat alignment as “slide and score.” Shift one channel over a
+            reference channel by small amounts, score each candidate with a similarity metric, and pick the
+            shift with the highest score.
+          </p>
+
+          <p><strong>Step-by-step process:</strong></p>
+          <ol>
+            <li>Crop margins (~10%) from each channel to remove bright/black borders and scratches that can corrupt matching.</li>
+            <li>Define a search window (e.g., ±15 pixels vertically and horizontally) around zero shift.</li>
+            <li>For every candidate shift in this window, shift the moving channel and compute a similarity score against the reference.</li>
+            <li>Select the best shift (the one with the highest score) and apply it to the full-resolution channel.</li>
+            <li>Reconstruct color by stacking the aligned channels into RGB order.</li>
+          </ol>
+
+          <p>
+            <strong>Similarity score (NCC):</strong> Normalized cross-correlation compares patterns of
+            brightness/contrast while normalizing away overall intensity differences. The maximum NCC
+            indicates the best alignment.
+          </p>
+
+          <p>
+            <strong>When it works well:</strong> Small images or modest misalignments (e.g., JPGs) where a
+            limited search covers the true shift. It’s simple, fast enough, and often accurate.
+          </p>
+
+          <p>
+            <strong>Limitations:</strong> Because it runs at one resolution with a fixed window, large
+            displacements in high-resolution scans (e.g., TIFFs) can fall outside the window, causing
+            misalignment. This motivates the multi-scale (pyramid) approach in Section B.
+          </p>
         
         <div class="gallery" data-group="sA">
           <figure>
@@ -104,19 +183,60 @@
       <!-- Section B -->
       <article class="card">
         <h2>Section B — Image Pyramid</h2>
-        <p>
+        <!-- <p>
           <strong>Context:</strong> 
           To handle the large .tif scans efficiently, I implemented an image pyramid. 
           Each channel was recursively downsampled by a factor of two until the smallest dimension reached a set minimum size. 
           At the coarsest level, alignment was performed using normalized cross-correlation (NCC) over a fixed displacement window. 
           Before computing NCC, each image was min–max normalized to the [0,1] range so that differences in overall brightness or exposure between channels would not bias the similarity measure. 
           The best offset found at the coarsest level was then scaled back up (multiplied by two at each step) and propagated upward to full resolution.
+        </p> -->
+        <p>
+          The image pyramid algorithm improves alignment for large, high-resolution scans where naive
+          single-scale search would be too slow or miss large displacements. It works by aligning
+          channels at multiple scales, from coarse to fine, reusing estimates at each level.
+        </p>
+
+        <p>
+          <strong>Intuition:</strong> At low resolution, big misalignments shrink to just a few pixels,
+          so a small search window is enough to find them. Once that shift is found, it is doubled
+          (because each pixel at half-resolution equals two pixels at full size) and used as a starting
+          guess at the next finer level. Refinement continues until the original resolution is reached.
+        </p>
+
+        <p>
+          <strong>Step-by-step process:</strong>
+        </p>
+        <ol>
+          <li>Crop borders (~ 10%) to remove distracting edges from the glass plates.</li>
+          <li>Normalize intensities of each cropped channel so brightness differences don’t bias results.</li>
+          <li>Downscale both channels by 2× recursively until a minimum size is reached.</li>
+          <li>At the coarsest level, run a local search with normalized cross-correlation (NCC) to find
+              the best offset.</li>
+          <li>Scale that offset upward (multiply by 2) as you return to the next level.</li>
+          <li>At each level, refine the estimate by running another small local search around the guess.</li>
+          <li>When back at full resolution, the final refined shift is applied to align the channel.</li>
+        </ol>
+
+        <p>
+          <strong>Normalization:</strong> 
+          Before computing NCC at each level, each image is min–max normalized to the [0,1] range. 
+          This step removes differences in absolute brightness or exposure between channels, so that alignment depends on structural detail 
+          (edges, textures) rather than overall intensity. In practice, this greatly stabilizes NCC scores and reduces the risk of mismatched channels.
         </p>
         <p>
-            <strong>Notes:</strong> 
-            I aligned r, b to g, instead of r, g to b. 
-            For some reason, when I tried aligning r, g to b, the offset is incorrect. 
-            See appendix for more. 
+          <strong>Why it works:</strong> Each level only needs a modest search radius, so computation
+          is efficient. Because resolution is halved each step, the total work is small compared to
+          brute force at full resolution. This lets the algorithm handle large shifts in .tif scans
+          while keeping runtime practical.
+        </p>
+
+        <p>
+          <strong>Notes:</strong> 
+          Shifts are reported in (row, column) convention (x, y). 
+          I aligned r, b to g, instead of r, g to b. 
+          For some reason, when I tried aligning r, g to b, the offset is incorrect. 
+          See appendix for more. 
         </p>
         
         <div class="gallery" data-group="sB">
@@ -196,6 +316,45 @@
       <article class="card">
         <h2>Section C — Bells and Whistles</a></h2>
         <p>
+          The edge-detection extension strengthens the alignment process by focusing on structural
+          features instead of raw pixel intensities. Brightness and color can vary significantly across
+          channels, but edges (building outlines, object boundaries, strong contrast transitions, etc.)
+          remain consistent. Using edges makes normalized cross-correlation more robust when images differ
+          in exposure or illumination.
+        </p>
+
+        <p>
+          <strong>How it works:</strong> Before alignment, each channel is converted into an edge map
+          using the Sobel operator. Sobel filters compute horizontal and vertical gradients, which are
+          then combined into a single edge-magnitude image. These edge maps emphasize structural lines and
+          corners while ignoring broad brightness differences.
+        </p>
+
+        <p>
+          <strong>Step-by-step process:</strong>
+        </p>
+        <ol>
+          <li>Crop away margins (~10%) to avoid misleading border artifacts.</li>
+          <li>Downsample each channel at multiple scales (coarse to fine), just as in the pyramid approach.</li>
+          <li>At each scale, compute edge maps for both the reference and the channel being aligned.</li>
+          <li>Align edge maps using normalized cross-correlation within a local search window, starting
+              from a coarse estimate and refining as resolution increases.</li>
+          <li>Propagate the best shift upward through the pyramid until the full resolution is reached.</li>
+          <li>Apply the final offset to the original full-resolution channel for reconstruction.</li>
+        </ol>
+
+        <p>
+          <strong>Why it helps:</strong> Since edges are invariant to global brightness, the algorithm can
+          correctly align images even when one channel is darker, lighter, or has uneven lighting. This
+          often yields sharper results on challenging photographs compared to intensity-based alignment.
+        </p>
+
+        <p>
+          <strong>Notes:</strong> The Sobel operator highlights strong gradients but may amplify noise on
+          flat regions. Cropping and pyramid scaling help suppress these effects. In practice, this method
+          improves consistency and stability of alignment across difficult images.
+        </p>
+        <!-- <p>
           <strong>Context:</strong> 
           As an extension (“bells and whistles”), I incorporated Sobel edge detection into the alignment pipeline. 
           Instead of comparing raw intensity values across channels, I applied the Sobel operator to emphasize edges and structural boundaries. 
@@ -205,7 +364,7 @@
         <p>
             <strong>Notes:</strong> 
             Some chosen images (although the differences is not huge). 
-        </p>
+        </p> -->
         <div class="gallery" data-group="sC">
           <figure>
             <img src="./media/emir_sobel.png" alt="emir.tif" />

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 2 · CS180</title>
+
+  <!-- Pre-paint theme (same key/logic as other pages) -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme');
+        const initial = (saved === 'light' || saved === 'dark')
+          ? saved
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', initial);
+      } catch { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
+
+  <!-- Reuse site-wide styles + small P2 helpers -->
+  <link rel="stylesheet" href="../1/styles.css?v=1" />
+  <link rel="stylesheet" href="./p2.css?v=1" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="crumbs">
+      <a href="../index.html">← Back to Home</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </nav>
+
+    <header class="hero">
+      <h1>Project 2: Fun with Filters and Frequencies!</h1>
+      <p class="subtitle">
+        Convolutions from scratch, edges with DoG, unsharp masking, hybrid images, Gaussian/Laplacian stacks, and multiresolution blending.
+      </p>
+      <ul class="meta">
+        <li><strong>Date:</strong> Sep 2025</li>
+        <li><strong>Course:</strong> CS180</li>
+      </ul>
+    </header>
+
+    <main class="grid">
+
+      <!-- Summary -->
+      <section class="summary">
+        <h2>Project Overview</h2>
+        <p>
+          This project builds visual intuition for spatial filtering and frequency representations. I first implement convolution and edge detectors (finite differences and derivative-of-Gaussian),
+          then explore applications: unsharp masking for sharpening, hybrid images, and multiresolution blending (the legendary <em>oraple</em>).
+        </p>
+        <p class="callout">
+          Tip: Click any image to open a lightbox gallery. Most results are shown at medium size for load speed.
+        </p>
+      </section>
+
+      <!-- Part 1 -->
+      <article class="card">
+        <h2>Part 1 — Fun with Filters</h2>
+
+        <h3>1.1 Convolutions from Scratch</h3>
+        <div class="flex2 stack">
+          <div>
+            <p>
+              I implemented 2D convolution with: (a) four nested loops, (b) two loops with vectorized inner ops, and (c) compared against
+              <code>scipy.signal.convolve2d</code>. I used zero padding. Below is a snippet for the looped version.
+            </p>
+            <pre><code># 4 loops (numpy)
+def conv_4(img, kernel):
+    h, w = img.shape
+    kh, kw = kernel.shape
+    pad_h = kh // 2 
+    pad_w = kw // 2
+    padded_img = np.pad(img, ((pad_h,pad_h),(pad_w,pad_w)), mode="constant", constant_values=0)
+    kernel = np.flip(kernel)
+    out = np.zeros(img.shape)
+    if kernel.sum() != 0:
+        kernel = kernel / kernel.sum()         
+    for i in range(h):
+        for j in range(w):
+            for k in range(kh):
+                for l in range(kw):
+                    out[i][j] += padded_img[i+k][j+l] * kernel[k][l]             
+    return out </code></pre>
+
+            <pre><code># 2 loops (numpy)
+def conv_2(img, kernel):
+    h, w = img.shape
+    kh, kw = kernel.shape
+    pad_h = kh // 2 
+    pad_w = kw // 2
+    padded_img = np.pad(img, ((pad_h,pad_h),(pad_w,pad_w)), mode="constant", constant_values=0)
+    kernel = np.flip(kernel)
+    out = np.zeros(img.shape)
+    if kernel.sum() != 0:
+        kernel = kernel / kernel.sum()  
+    for i in range(h):
+        for j in range(w):
+            mask = padded_img[i:i+kh, j:j+kw]
+            out[i][j] = np.sum(mask * kernel)    
+    return out  </code></pre>
+
+            <pre><code># scipy.signal.convolve2d
+ signal.convolve2d(img, kernel, mode="same", boundary="fill", fillvalue=0)  </code></pre>
+          </div>
+          <p>
+            To compare the efficiency in terms of run time, the 4-loop ran for the longest (around 10 seconds to complete the box filter), 
+            and the second longest was te 2-loop, where it took around 0.7 seconds to complete. The fastest was Using the <code>scipy.signal.convolve2d</code> 
+            code, where it took 0.0 second to complete the box filter convolution.
+          </p>
+
+          <figure class="widefig" data-group="p11">
+            <img src="./media/part_1_1.png" alt="Original vs. Dx vs. Dy vs. Box filter" />
+            <figcaption>Original vs. Dx vs. Dy vs. Box filter</figcaption>
+          </figure>
+
+          
+        </div>
+
+        <h3>1.2 Finite Difference Operator</h3>
+        <p>
+          Using Dx and Dy, I computed partial derivatives, gradient magnitude, and a binarized edge map (threshold tuned qualitatively).
+        </p>
+        <figure class="widefig" data-group="p12">
+          <img src="./media/part_1_2.png" alt="cameraman" />
+          <figcaption>Cameraman</figcaption>
+        </figure>
+
+        <h3>1.3 Derivative of Gaussian (DoG)</h3>
+        <p>
+          To suppress noise, I blurred with a Gaussian before differencing, and also built DoG filters directly by convolving
+          the Gaussian with Dx/Dy and applying the resulting filters to the image—both paths matched numerically.
+        </p>
+        <div class="gallery stack" data-group="p13">
+          <figure><img src="./media/part_1_3_1.png" alt="DoG gradient magnitude" /><figcaption>DoG gradient magnitude</figcaption></figure>
+          <figure><img src="./media/part_1_3_2.png" alt="Cameraman (smoothed)" /><figcaption>Cameraman (smoothed)</figcaption></figure>
+        </div>
+
+        <!-- <details>
+          <summary>✨ Bells & Whistles: Gradient orientation (HSV)</summary>
+          <div class="gallery" data-group="p1b">
+            <figure><img src="./media/cameraman_orient_hsv.png" alt="Gradient orientation visualized with HSV" /><figcaption>Hue encodes orientation</figcaption></figure>
+          </div>
+        </details> -->
+      </article>
+
+      <!-- Part 2 -->
+      <article class="card">
+        <h2>Part 2 — Fun with Frequencies</h2>
+
+        <h3>2.1 Image “Sharpening” (Unsharp Mask)</h3>
+        <p>
+          I implemented unsharp masking by adding scaled high frequencies back to the image. I also blurred a sharp image and attempted to re-sharpen, comparing to the original.
+        </p>
+        <div class="gallery stack" data-group="p21">
+          <figure class="four-images">
+            <img src="./media/taj.jpg" alt="taj" />
+            <img src="./media/camel.jpg" alt="camel" />
+            <img src="./media/building.jpg" alt="building" />
+            <img src="./media/cdss.jpg" alt="cdss" />
+            <figcaption>All images</figcaption>
+          </figure>
+          <figure><img src="./media/part_2_1_2.png" alt="taj unsharpen" /><figcaption>taj unsharpen</figcaption></figure>
+          <figure><img src="./media/part_2_1_3.png" alt="Camel unsharpen" /><figcaption>Camel unsharpen</figcaption></figure>
+          <figure><img src="./media/part_2_1_4.png" alt="Building unsharpen" /><figcaption>Building unsharpen</figcaption></figure>
+          <figure><img src="./media/part_2_1_5.png" alt="CDSS original and blurred" /><figcaption>CDSS original and blurred</figcaption></figure>
+          <figure><img src="./media/part_2_1_6.png" alt="CDSS unsharpen" /><figcaption>CDSS unsharpen</figcaption></figure>
+        </div>
+
+        <h3>2.2 Hybrid Images</h3>
+        <p>
+          I aligned pairs, low-pass filtered one image and high-pass filtered the other, and combined them. For my favorite hybrid, I visualized the Fourier spectra along the pipeline.
+        </p>
+        <div class="hybrid-layout" data-group="p22">
+          <!-- Row 1: 4 images -->
+          <div class="hybrid-row">
+            <figure><img src="./media/DerekPicture.jpg" alt="Hybrid 1 input A" /><figcaption>Input A</figcaption></figure>
+            <figure><img src="./media/nutmeg.jpg" alt="Hybrid 1 input B" /><figcaption>Input B</figcaption></figure>
+            <figure><img src="./media/DerekPicture_aligned.jpg" alt="Aligned(A)" /><figcaption>Aligned(A)</figcaption></figure>
+            <figure><img src="./media/nutmeg_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
+          </div>
+          
+          <!-- Row 2: 1 full-width image -->
+          <figure class="hybrid-wide"><img src="./media/part_2_2_1.png" alt="Hybrid Derek and Nutmeg" /><figcaption>Hybrid Derek and Nutmeg</figcaption></figure>
+          
+          <!-- Row 3: 4 images -->
+          <div class="hybrid-row">
+            <figure><img src="./media/bird.jpg" alt="Hybrid input A" /><figcaption>Input A</figcaption></figure>
+            <figure><img src="./media/plane.jpg" alt="Hybrid 2 input B" /><figcaption>Input B</figcaption></figure>
+            <figure><img src="./media/bird_aligned.jpg" alt="Align(A)" /><figcaption>Align(B)</figcaption></figure>
+            <figure><img src="./media/plane_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
+          </div>
+          
+          <!-- Row 4: 1 full-width image -->
+          <figure class="hybrid-wide"><img src="./media/part_2_2_2.png" alt="Hybrid Bird and Plane" /><figcaption>Hybrid Bird and Plane</figcaption></figure>
+          
+          <!-- Row 5: 4 images -->
+          <div class="hybrid-row">
+            <figure><img src="./media/dog_3.jpg" alt="Hybrid 3 input A" /><figcaption>Input A</figcaption></figure>
+            <figure><img src="./media/cat_2.jpg" alt="Hybrid 3 input B" /><figcaption>Input B</figcaption></figure>
+            <figure><img src="./media/dog_aligned.jpg" alt="Align(A)" /><figcaption>Align(A)</figcaption></figure>
+            <figure><img src="./media/cat_aligned.jpg" alt="Align(B)" /><figcaption>Align(B)</figcaption></figure>
+          </div>
+          
+          <!-- Row 6: 1 full-width image -->
+          <figure class="hybrid-wide"><img src="./media/part_2_2_3.png" alt="Hybrid Dog and Cat" /><figcaption>Hybrid Dog and Cat</figcaption></figure>
+          
+          <!-- Row 7: 1 full-width image -->
+          <figure class="hybrid-wide"><img src="./media/part_2_2_4.png" alt="Grayscale plots" /><figcaption>Grayscale plots</figcaption></figure>
+          
+          <!-- Row 8: 1 full-width image -->
+          <figure class="hybrid-wide"><img src="./media/part_2_2_5.png" alt="FFT visualization" /><figcaption>FFT visualization</figcaption></figure>
+        </div>
+
+        <p>
+          As for the FFT graph, I used the dog and cat images to visualize the Fourier graph, as well as plotting out their grayscales.
+        </p>
+
+        <h3>2.3 Gaussian & Laplacian Stacks</h3>
+        <p>
+          I built Gaussian and Laplacian stacks (no downsampling) and reproduced the Oraple figure structure.
+        </p>
+        
+        <div class="two-images" data-group="p23">
+          <figure><img src="./media/apple.jpeg" alt="Apple" /><figcaption>Apple</figcaption></figure>
+          <figure><img src="./media/orange.jpeg" alt="Orange" /><figcaption>Orange</figcaption></figure>
+        </div>
+        
+        <figure class="widefig" data-group="p23">
+          <img src="./media/mask_apple_orange.png" alt="Mask Apple and Orange" />
+          <figcaption>Mask Apple and Orange</figcaption>
+        </figure>
+        
+        <div class="gallery" data-group="p23">
+          
+          <figure><img src="./media/apple_gauss_stack.png" alt="Apple Gaussian/Laplacian stack" /><figcaption>Apple — Gaussian/Laplacian stack</figcaption></figure>
+          <figure><img src="./media/orange_gauss_stack.png" alt="Orange Gaussian/Laplacian stack" /><figcaption>Orange — Gaussian/Laplacian stack</figcaption></figure>
+          <figure><img src="./media/figure_3.42.png" alt="Figure 3.42" /><figcaption>Figure 3.42</figcaption></figure>
+          <figure><img src="./media/blend_apple_orange.png" alt="Blend Apple and Orange" /><figcaption>Blend Apple and Orange</figcaption></figure>
+        </div>
+
+        <h3>2.4 Multiresolution Blending (a.k.a. the oraple!)</h3>
+        <p>
+          Using the stacks above and a Gaussian stack of the mask, I blended pairs with straight and irregular masks.
+        </p>
+        
+        <div class="three-images" data-group="p24">
+          <figure><img src="./media/oraple.png" alt="Oraple" /><figcaption>Oraple</figcaption></figure>
+          <figure><img src="./media/banaber.png" alt="Banaber" /><figcaption>Banaber</figcaption></figure>
+          <figure><img src="./media/car.png" alt="car" /><figcaption>Car</figcaption></figure>
+        </div>
+        
+        <!-- First set -->
+        <div class="two-images" data-group="p24">
+          <figure><img src="./media/banana.jpg" alt="Banana" /><figcaption>Banana</figcaption></figure>
+          <figure><img src="./media/cucumber.jpg" alt="Cucumber" /><figcaption>Cucumber</figcaption></figure>
+        </div>
+        
+        <figure class="widefig" data-group="p24">
+          <img src="./media/mask_banana_cucumber.png" alt="Mask Banana and Cucumber" />
+          <figcaption>Mask Banana and Cucumber</figcaption>
+        </figure>
+        
+        <div class="gallery" data-group="p24">
+          <figure><img src="./media/banana_gauss_stack.png" alt="Banana -- Gaussian/Laplacian stack" /><figcaption>Banana -- Gaussian/Laplacian stack</figcaption></figure>
+          <figure><img src="./media/cucumber_gauss_stack.png" alt="Cucumber -- Gaussian/Laplacian stack" /><figcaption>Cucumber -- Gaussian/Laplacian stack</figcaption></figure>
+          <figure><img src="./media/blend_banana_cucumber.png" alt="Blend Banana and Cucumber" /><figcaption>Blend Banana and Cucumber</figcaption></figure>
+          <!-- <figure><img src="./media/custom_blend.png" alt="custom blend" /><figcaption>Custom blend</figcaption></figure> -->
+        </div>
+        
+        <!-- Second set -->
+        <div class="two-images" data-group="p24">
+          <figure><img src="./media/red.jpg" alt="Red Car" /><figcaption>Red Car</figcaption></figure>
+          <figure><img src="./media/blue.jpg" alt="Blue Car" /><figcaption>Blue Car</figcaption></figure>
+        </div>
+        
+        <figure class="widefig" data-group="p24">
+          <img src="./media/mask_red_blue.png" alt="Mask Red and Blue" />
+          <figcaption>Mask Red and Blue</figcaption>
+        </figure>
+        
+        <div class="gallery" data-group="p24">
+          <figure><img src="./media/red_gauss_stack.png" alt="Red Gasussian/Laplacian stack" /><figcaption>Red Gasussian/Laplacian stack</figcaption></figure>
+          <figure><img src="./media/blue_gauss_stack.png" alt="Blue Gasussian/Laplacian stack" /><figcaption>Blue Gasussian/Laplacian stack</figcaption></figure>
+          <!-- <figure><img src="./media/bird_plane_custom_mask.png" alt="Bird plane custom mask" /><figcaption>Bird plane custom mask</figcaption></figure> -->
+          <figure><img src="./media/blend_red_blue.png" alt="Blend Red and Blue" /><figcaption>Blend Red and Blue</figcaption></figure>
+        </div>
+      </article>
+
+      <!-- Resources -->
+      <article class="card">
+        <h2>Resources</h2>
+        <ul>
+          <li><a href="https://cal-cs180.github.io/fa25/hw/proj2/" target="_blank" rel="noopener">Project Description</a></li>
+          <li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve2d.html" target="_blank" rel="noopener">scipy.signal.convolve2d</a></li>
+          <li><a href="https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic" target="_blank" rel="noopener">Cyclic colormaps</a></li>
+          <li><a href="../index.html">Home</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Lightbox modal (reused from P1 for consistency) -->
+    <div id="lightbox" class="lb" aria-hidden="true">
+      <button class="lb-close" aria-label="Close">×</button>
+      <button class="lb-prev" aria-label="Previous">‹</button>
+      <img class="lb-img" alt="" />
+      <div class="lb-cap" role="note"></div>
+      <button class="lb-next" aria-label="Next">›</button>
+    </div>
+
+    <footer class="foot">
+      © <span id="y"></span> Karen Shieh — CS180
+    </footer>
+  </div>
+
+  <!-- Lightbox JS (identical behavior to P1) -->
+  <script>
+  (() => {
+    const modal = document.getElementById('lightbox');
+    const imgEl = modal.querySelector('.lb-img');
+    const capEl = modal.querySelector('.lb-cap');
+    const btnPrev = modal.querySelector('.lb-prev');
+    const btnNext = modal.querySelector('.lb-next');
+    const btnClose = modal.querySelector('.lb-close');
+
+    const groups = {};
+    document.querySelectorAll('.gallery[data-group], .widefig[data-group], .hybrid-layout[data-group], .two-images[data-group], .three-images[data-group]').forEach(container => {
+      const groupName = container.dataset.group;
+      const items = Array.from(container.querySelectorAll('img'));
+      groups[groupName] = items;
+      items.forEach((img, idx) => {
+        img.dataset.group = groupName;
+        img.dataset.index = idx;
+        img.addEventListener('click', (e) => {
+          const t = e.currentTarget;
+          currentGroup = t.dataset.group;
+          currentIndex = parseInt(t.dataset.index, 10);
+          openLightbox();
+        });
+      });
+    });
+
+    let currentGroup = null;
+    let currentIndex = 0;
+    let prevFocus = null;
+
+    function openLightbox() {
+      const list = groups[currentGroup];
+      if (!list || !list.length) return;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+      prevFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      modal.setAttribute('aria-hidden','false');
+      btnClose.focus();
+      addListeners(true);
+    }
+    function closeLightbox() {
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      addListeners(false);
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function show(src, alt) { imgEl.src = src; imgEl.alt = alt; capEl.textContent = alt; }
+    function next() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex + 1) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function prev() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function onKey(e) {
+      if (modal.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    }
+    function onBackdropClick(e) { if (e.target === modal) closeLightbox(); }
+    let x0 = null;
+    function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
+    function onTouchEnd(e){
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+      x0 = null;
+    }
+    function addListeners(on) {
+      const m = on ? 'addEventListener' : 'removeEventListener';
+      document[m]('keydown', onKey);
+      modal[m]('click', onBackdropClick);
+      imgEl[m]('touchstart', onTouchStart, {passive:true});
+      imgEl[m]('touchend', onTouchEnd, {passive:true});
+    }
+    btnClose.addEventListener('click', closeLightbox);
+    btnNext.addEventListener('click', next);
+    btnPrev.addEventListener('click', prev);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); });
+  })();
+  </script>
+
+  <!-- Year + Theme toggle -->
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    function syncButton(){
+      const mode = root.getAttribute('data-theme');
+      if (mode === 'light') { icon.textContent = '🌞'; label.textContent = 'Light'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark'; }
+    }
+    syncButton();
+    btn.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncButton();
+    });
+  </script>
+</body>
+</html>

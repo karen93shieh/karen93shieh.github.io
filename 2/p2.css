@@ -81,10 +81,6 @@ pre{background:var(--card);border:1px solid var(--line);border-radius:12px;paddi
 }
 
 .four-images figcaption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   text-align: center;
   margin-top: 0.5rem;
 }

@@ -50,10 +50,10 @@
         <h2>Project Overview</h2>
         <p>
           This project builds visual intuition for spatial filtering and frequency representations. I first implement convolution and edge detectors (finite differences and derivative-of-Gaussian),
-          then explore applications: unsharp masking for sharpening, hybrid images, and multiresolution blending (the legendary <em>oraple</em>).
+          then explore the different applications: unsharp masking for sharpening, hybrid images, and multiresolution blending (the legendary <em>oraple</em> 🍎🍊).
         </p>
         <p class="callout">
-          Tip: Click any image to open a lightbox gallery. Most results are shown at medium size for load speed.
+          Tip: Click any image to open a lightbox gallery.
         </p>
       </section>
 
@@ -65,7 +65,7 @@
         <div class="flex2 stack">
           <div>
             <p>
-              I implemented 2D convolution with: (a) four nested loops, (b) two loops with vectorized inner ops, and (c) compared against
+              I implemented 2D convolution with: (a) four nested loops, (b) two loops with numpy vectorized inner operations, and (c) compared against
               <code>scipy.signal.convolve2d</code>. I used zero padding. Below is a snippet for the looped version.
             </p>
             <pre><code># 4 loops (numpy)
@@ -105,12 +105,21 @@ def conv_2(img, kernel):
 
             <pre><code># scipy.signal.convolve2d
  signal.convolve2d(img, kernel, mode="same", boundary="fill", fillvalue=0)  </code></pre>
+
+           <pre><code># Dx Dy, and box kernel
+dx_kernel = np.array([[1, 0, -1]], dtype = float)
+dy_kernel = np.array([[-1],
+                      [0],
+                      [1]], dtype = float)
+box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
           </div>
           <p>
-            To compare the efficiency in terms of run time, the 4-loop ran for the longest (around 10 seconds to complete the box filter), 
-            and the second longest was te 2-loop, where it took around 0.7 seconds to complete. The fastest was Using the <code>scipy.signal.convolve2d</code> 
-            code, where it took 0.0 second to complete the box filter convolution.
+            To compare the efficiency in terms of run time, on an image of 300x400, the 4-loop ran for the longest (around 10 seconds to complete the box filter), 
+            and the second longest was the 2-loop, where it took around 0.7 seconds to complete. The fastest was Using the <code>scipy.signal.convolve2d</code> 
+            code, where it took 0.0 second to complete the box filter convolution. As for all boundaries, they were handled by using zero padding instead of reflection. This results in a 
+            darker edges near the border (since the values are convolve with 0). 
           </p>
+
 
           <figure class="widefig" data-group="p11">
             <img src="./media/part_1_1.png" alt="Original vs. Dx vs. Dy vs. Box filter" />
@@ -122,7 +131,15 @@ def conv_2(img, kernel):
 
         <h3>1.2 Finite Difference Operator</h3>
         <p>
-          Using Dx and Dy, I computed partial derivatives, gradient magnitude, and a binarized edge map (threshold tuned qualitatively).
+          Using Dx and Dy, I computed the edges, gradient magnitude, and a binarized edge map (threshold tuned qualitatively). 
+        </p>
+        <p>
+          The gradient magnitude was calculated by taking the sum of square of the dx and dy images. 
+        </p>
+        <p>
+          The threshold was selected as keeping the 95.75 percentile, keeping anything that's above that. That is, keep the top 5% of values 
+          in the min-max normalized gradient image. The trade-off is that with a smaller threshaold, we see more noise in the background 
+          (buildings). With a bigger threshold, however, causes us to lose details on the cameraman.  
         </p>
         <figure class="widefig" data-group="p12">
           <img src="./media/part_1_2.png" alt="cameraman" />
@@ -134,9 +151,21 @@ def conv_2(img, kernel):
           To suppress noise, I blurred with a Gaussian before differencing, and also built DoG filters directly by convolving
           the Gaussian with Dx/Dy and applying the resulting filters to the image—both paths matched numerically.
         </p>
+        <p>
+          The difference of blurring with a Gaussian is obvious, the noise are dimmed (say, the grass mostly disappear on the gradient magnitde image)
+          and the real edges are thicker. 
+        </p>
+        <p>
+          We can see that there is no difference in the images where we convolve the images with the gaussian and the dx, dy,
+          and the images that we directly convolve the gaussian with the dx, dy, and then apply to the images.
+        </p>
+        <div class="gallery stack" data-group="p14">
+          <figure><img src="./media/part_1_3_3.png" alt="Cameraman" /><figcaption>Cameraman with 2 convolution</figcaption></figure>
+        </div>
+        <p></p>
         <div class="gallery stack" data-group="p13">
           <figure><img src="./media/part_1_3_1.png" alt="DoG gradient magnitude" /><figcaption>DoG gradient magnitude</figcaption></figure>
-          <figure><img src="./media/part_1_3_2.png" alt="Cameraman (smoothed)" /><figcaption>Cameraman (smoothed)</figcaption></figure>
+          <figure><img src="./media/part_1_3_2.png" alt="Cameraman (smoothed)" /><figcaption>Cameraman with 1 convolution</figcaption></figure>
         </div>
 
         <!-- <details>
@@ -155,6 +184,14 @@ def conv_2(img, kernel):
         <p>
           I implemented unsharp masking by adding scaled high frequencies back to the image. I also blurred a sharp image and attempted to re-sharpen, comparing to the original.
         </p>
+        <p>
+          To blur the image is to remove high frequeny from it. That means if we take the original image, and remove (subtract) the blurred image (low frequency), 
+          what we have left is the high frequency. Why does it matter? Because the high frequencies are the details, the sharp edges, that can be used to sharpen the original image. 
+          This proccess is called "unsharpening." 
+        </p>
+        <p>
+          Below are some images that went throuh this process. One can see that the heavier the weight of the edges is, the more "pop out" the details are.
+        </p>
         <div class="gallery stack" data-group="p21">
           <figure class="four-images">
             <img src="./media/taj.jpg" alt="taj" />
@@ -164,6 +201,7 @@ def conv_2(img, kernel):
             <figcaption>All images</figcaption>
           </figure>
           <figure><img src="./media/part_2_1_2.png" alt="taj unsharpen" /><figcaption>taj unsharpen</figcaption></figure>
+          <figure><img src="./media/part_2_1_2_2.png" alt="taj unsharpen with different weights" /><figcaption>taj unsharpen with different weights</figcaption></figure>
           <figure><img src="./media/part_2_1_3.png" alt="Camel unsharpen" /><figcaption>Camel unsharpen</figcaption></figure>
           <figure><img src="./media/part_2_1_4.png" alt="Building unsharpen" /><figcaption>Building unsharpen</figcaption></figure>
           <figure><img src="./media/part_2_1_5.png" alt="CDSS original and blurred" /><figcaption>CDSS original and blurred</figcaption></figure>
@@ -176,24 +214,24 @@ def conv_2(img, kernel):
         </p>
         <div class="hybrid-layout" data-group="p22">
           <!-- Row 1: 4 images -->
-          <div class="hybrid-row">
+          <!-- <div class="hybrid-row">
             <figure><img src="./media/DerekPicture.jpg" alt="Hybrid 1 input A" /><figcaption>Input A</figcaption></figure>
             <figure><img src="./media/nutmeg.jpg" alt="Hybrid 1 input B" /><figcaption>Input B</figcaption></figure>
             <figure><img src="./media/DerekPicture_aligned.jpg" alt="Aligned(A)" /><figcaption>Aligned(A)</figcaption></figure>
             <figure><img src="./media/nutmeg_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
-          </div>
+          </div> -->
           
           <!-- Row 2: 1 full-width image -->
           <figure class="hybrid-wide"><img src="./media/part_2_2_1.png" alt="Hybrid Derek and Nutmeg" /><figcaption>Hybrid Derek and Nutmeg</figcaption></figure>
           
           <!-- Row 3: 4 images -->
-          <div class="hybrid-row">
+          <!-- <div class="hybrid-row">
             <figure><img src="./media/bird.jpg" alt="Hybrid input A" /><figcaption>Input A</figcaption></figure>
             <figure><img src="./media/plane.jpg" alt="Hybrid 2 input B" /><figcaption>Input B</figcaption></figure>
             <figure><img src="./media/bird_aligned.jpg" alt="Align(A)" /><figcaption>Align(B)</figcaption></figure>
             <figure><img src="./media/plane_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
           </div>
-          
+           -->
           <!-- Row 4: 1 full-width image -->
           <figure class="hybrid-wide"><img src="./media/part_2_2_2.png" alt="Hybrid Bird and Plane" /><figcaption>Hybrid Bird and Plane</figcaption></figure>
           
@@ -216,7 +254,9 @@ def conv_2(img, kernel):
         </div>
 
         <p>
-          As for the FFT graph, I used the dog and cat images to visualize the Fourier graph, as well as plotting out their grayscales.
+          I used the dog and cat images to plot out their grayscales, as well as visualizing the Fourier graph. The cutoff was chosen to 
+          be a gaussian with kernel size of 2 and sigma of 4 as the blurred value of the dog. As for the high frequency, the cutoff is a gaussian with kernel size of 49 
+          and a sigma of 8, then take the original image minus the blurred image. The high frequency cat then are "sharpen" by a factor of 3 (so the edges are more obvious)
         </p>
 
         <h3>2.3 Gaussian & Laplacian Stacks</h3>
@@ -224,17 +264,17 @@ def conv_2(img, kernel):
           I built Gaussian and Laplacian stacks (no downsampling) and reproduced the Oraple figure structure.
         </p>
         
-        <div class="two-images" data-group="p23">
+        <div class="two-images" data-group="p23a">
           <figure><img src="./media/apple.jpeg" alt="Apple" /><figcaption>Apple</figcaption></figure>
           <figure><img src="./media/orange.jpeg" alt="Orange" /><figcaption>Orange</figcaption></figure>
         </div>
         
-        <figure class="widefig" data-group="p23">
+        <figure class="widefig" data-group="p23b">
           <img src="./media/mask_apple_orange.png" alt="Mask Apple and Orange" />
           <figcaption>Mask Apple and Orange</figcaption>
         </figure>
         
-        <div class="gallery" data-group="p23">
+        <div class="gallery" data-group="p23b">
           
           <figure><img src="./media/apple_gauss_stack.png" alt="Apple Gaussian/Laplacian stack" /><figcaption>Apple — Gaussian/Laplacian stack</figcaption></figure>
           <figure><img src="./media/orange_gauss_stack.png" alt="Orange Gaussian/Laplacian stack" /><figcaption>Orange — Gaussian/Laplacian stack</figcaption></figure>
@@ -247,24 +287,24 @@ def conv_2(img, kernel):
           Using the stacks above and a Gaussian stack of the mask, I blended pairs with straight and irregular masks.
         </p>
         
-        <div class="three-images" data-group="p24">
+        <div class="three-images" data-group="p24a">
           <figure><img src="./media/oraple.png" alt="Oraple" /><figcaption>Oraple</figcaption></figure>
           <figure><img src="./media/banaber.png" alt="Banaber" /><figcaption>Banaber</figcaption></figure>
           <figure><img src="./media/car.png" alt="car" /><figcaption>Car</figcaption></figure>
         </div>
         
         <!-- First set -->
-        <div class="two-images" data-group="p24">
+        <div class="two-images" data-group="p24b">
           <figure><img src="./media/banana.jpg" alt="Banana" /><figcaption>Banana</figcaption></figure>
           <figure><img src="./media/cucumber.jpg" alt="Cucumber" /><figcaption>Cucumber</figcaption></figure>
         </div>
         
-        <figure class="widefig" data-group="p24">
+        <figure class="widefig" data-group="p24e">
           <img src="./media/mask_banana_cucumber.png" alt="Mask Banana and Cucumber" />
           <figcaption>Mask Banana and Cucumber</figcaption>
         </figure>
         
-        <div class="gallery" data-group="p24">
+        <div class="gallery" data-group="p24e">
           <figure><img src="./media/banana_gauss_stack.png" alt="Banana -- Gaussian/Laplacian stack" /><figcaption>Banana -- Gaussian/Laplacian stack</figcaption></figure>
           <figure><img src="./media/cucumber_gauss_stack.png" alt="Cucumber -- Gaussian/Laplacian stack" /><figcaption>Cucumber -- Gaussian/Laplacian stack</figcaption></figure>
           <figure><img src="./media/blend_banana_cucumber.png" alt="Blend Banana and Cucumber" /><figcaption>Blend Banana and Cucumber</figcaption></figure>
@@ -272,17 +312,17 @@ def conv_2(img, kernel):
         </div>
         
         <!-- Second set -->
-        <div class="two-images" data-group="p24">
+        <div class="two-images" data-group="p24c">
           <figure><img src="./media/red.jpg" alt="Red Car" /><figcaption>Red Car</figcaption></figure>
           <figure><img src="./media/blue.jpg" alt="Blue Car" /><figcaption>Blue Car</figcaption></figure>
         </div>
         
-        <figure class="widefig" data-group="p24">
+        <figure class="widefig" data-group="p24d">
           <img src="./media/mask_red_blue.png" alt="Mask Red and Blue" />
           <figcaption>Mask Red and Blue</figcaption>
         </figure>
         
-        <div class="gallery" data-group="p24">
+        <div class="gallery" data-group="p24d">
           <figure><img src="./media/red_gauss_stack.png" alt="Red Gasussian/Laplacian stack" /><figcaption>Red Gasussian/Laplacian stack</figcaption></figure>
           <figure><img src="./media/blue_gauss_stack.png" alt="Blue Gasussian/Laplacian stack" /><figcaption>Blue Gasussian/Laplacian stack</figcaption></figure>
           <!-- <figure><img src="./media/bird_plane_custom_mask.png" alt="Bird plane custom mask" /><figcaption>Bird plane custom mask</figcaption></figure> -->

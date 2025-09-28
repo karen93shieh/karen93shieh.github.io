@@ -115,7 +115,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
           </div>
           <p>
             To compare the efficiency in terms of run time, on an image of 300x400, the 4-loop ran for the longest (around 10 seconds to complete the box filter), 
-            and the second longest was the 2-loop, where it took around 0.7 seconds to complete. The fastest was Using the <code>scipy.signal.convolve2d</code> 
+            and the second longest was the 2-loop, where it took around 0.7 seconds to complete. The fastest was using the <code>scipy.signal.convolve2d</code> 
             code, where it took 0.0 second to complete the box filter convolution. As for all boundaries, they were handled by using zero padding instead of reflection. This results in a 
             darker edges near the border (since the values are convolve with 0). 
           </p>
@@ -134,10 +134,10 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
           Using Dx and Dy, I computed the edges, gradient magnitude, and a binarized edge map (threshold tuned qualitatively). 
         </p>
         <p>
-          The gradient magnitude was calculated by taking the sum of square of the dx and dy images. 
+          The gradient magnitude was calculated by taking the square root of the sum of square of the dx and dy values. 
         </p>
         <p>
-          The threshold was selected as keeping the 95.75 percentile, keeping anything that's above that. That is, keep the top 5% of values 
+          The threshold was selected as keeping the 95.75 percentile (keeping anything that's above that). That is, keep the top 5% of values 
           in the min-max normalized gradient image. The trade-off is that with a smaller threshaold, we see more noise in the background 
           (buildings). With a bigger threshold, however, causes us to lose details on the cameraman.  
         </p>
@@ -149,14 +149,14 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
         <h3>1.3 Derivative of Gaussian (DoG)</h3>
         <p>
           To suppress noise, I blurred with a Gaussian before differencing, and also built DoG filters directly by convolving
-          the Gaussian with Dx/Dy and applying the resulting filters to the image—both paths matched numerically.
+          the Gaussian with Dx/Dy and applying the resulting filters to the image. Both methods matched numerically and visually.
         </p>
         <p>
           The difference of blurring with a Gaussian is obvious, the noise are dimmed (say, the grass mostly disappear on the gradient magnitde image)
           and the real edges are thicker. 
         </p>
         <p>
-          We can see that there is no difference in the images where we convolve the images with the gaussian and the dx, dy,
+          We can see that there is no difference in the images where we convolve the images with the gaussian and then the dx, dy,
           and the images that we directly convolve the gaussian with the dx, dy, and then apply to the images.
         </p>
         <div class="gallery stack" data-group="p14">
@@ -178,7 +178,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
 
       <!-- Part 2 -->
       <article class="card">
-        <h2>Part 2 — Fun with Frequencies</h2>
+        <h2>Part 2 — Fun with Frequencies!</h2>
 
         <h3>2.1 Image “Sharpening” (Unsharp Mask)</h3>
         <p>
@@ -190,7 +190,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
           This proccess is called "unsharpening." 
         </p>
         <p>
-          Below are some images that went throuh this process. One can see that the heavier the weight of the edges is, the more "pop out" the details are.
+          Below are some images that went through this process. One can see that the heavier the weight of the edges is, the more "pop out" the details are.
         </p>
         <div class="gallery stack" data-group="p21">
           <figure class="four-images">
@@ -214,24 +214,24 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
         </p>
         <div class="hybrid-layout" data-group="p22">
           <!-- Row 1: 4 images -->
-          <!-- <div class="hybrid-row">
+          <div class="hybrid-row">
             <figure><img src="./media/DerekPicture.jpg" alt="Hybrid 1 input A" /><figcaption>Input A</figcaption></figure>
             <figure><img src="./media/nutmeg.jpg" alt="Hybrid 1 input B" /><figcaption>Input B</figcaption></figure>
             <figure><img src="./media/DerekPicture_aligned.jpg" alt="Aligned(A)" /><figcaption>Aligned(A)</figcaption></figure>
             <figure><img src="./media/nutmeg_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
-          </div> -->
+          </div>
           
           <!-- Row 2: 1 full-width image -->
           <figure class="hybrid-wide"><img src="./media/part_2_2_1.png" alt="Hybrid Derek and Nutmeg" /><figcaption>Hybrid Derek and Nutmeg</figcaption></figure>
           
           <!-- Row 3: 4 images -->
-          <!-- <div class="hybrid-row">
+          <div class="hybrid-row">
             <figure><img src="./media/bird.jpg" alt="Hybrid input A" /><figcaption>Input A</figcaption></figure>
             <figure><img src="./media/plane.jpg" alt="Hybrid 2 input B" /><figcaption>Input B</figcaption></figure>
             <figure><img src="./media/bird_aligned.jpg" alt="Align(A)" /><figcaption>Align(B)</figcaption></figure>
             <figure><img src="./media/plane_aligned.jpg" alt="Aligned(B)" /><figcaption>Aligned(B)</figcaption></figure>
           </div>
-           -->
+          
           <!-- Row 4: 1 full-width image -->
           <figure class="hybrid-wide"><img src="./media/part_2_2_2.png" alt="Hybrid Bird and Plane" /><figcaption>Hybrid Bird and Plane</figcaption></figure>
           
@@ -255,13 +255,13 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
 
         <p>
           I used the dog and cat images to plot out their grayscales, as well as visualizing the Fourier graph. The cutoff was chosen to 
-          be a gaussian with kernel size of 2 and sigma of 4 as the blurred value of the dog. As for the high frequency, the cutoff is a gaussian with kernel size of 49 
+          be a gaussian with kernel size of 25 and sigma of 4 as the blurred value of the dog. As for the high frequency, the cutoff is a gaussian with kernel size of 49 
           and a sigma of 8, then take the original image minus the blurred image. The high frequency cat then are "sharpen" by a factor of 3 (so the edges are more obvious)
         </p>
 
         <h3>2.3 Gaussian & Laplacian Stacks</h3>
         <p>
-          I built Gaussian and Laplacian stacks (no downsampling as opposed to pyramid) and reproduced the Oraple figure structure, as well as other images. 
+          I built Gaussian and Laplacian stacks (no downsampling as opposed to pyramid) and reproduced the Oraple figure, as well as other images. 
         </p>
         <p>
           For the oraple, I created a Gaussian/Laplacian stack with 8 layers.  
@@ -349,7 +349,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj2/" target="_blank" rel="noopener">Project Description</a></li>
           <li><a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve2d.html" target="_blank" rel="noopener">scipy.signal.convolve2d</a></li>
-          <li><a href="https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic" target="_blank" rel="noopener">Cyclic colormaps</a></li>
+          <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
           <li><a href="../index.html">Home</a></li>
         </ul>
       </article>

@@ -261,7 +261,12 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
 
         <h3>2.3 Gaussian & Laplacian Stacks</h3>
         <p>
-          I built Gaussian and Laplacian stacks (no downsampling) and reproduced the Oraple figure structure.
+          I built Gaussian and Laplacian stacks (no downsampling as opposed to pyramid) and reproduced the Oraple figure structure, as well as other images. 
+        </p>
+        <p>
+          For the oraple, I created a Gaussian/Laplacian stack with 8 layers.  
+          Then, I applied the "binary" masks (that went through the same Gaussian filter) to the apple and orange's Laplacian stacks, individually. 
+          The masks were "flipped" (1-value) so that the images can be sticth together in the middle. 
         </p>
         
         <div class="two-images" data-group="p23a">
@@ -284,7 +289,11 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
 
         <h3>2.4 Multiresolution Blending (a.k.a. the oraple!)</h3>
         <p>
-          Using the stacks above and a Gaussian stack of the mask, I blended pairs with straight and irregular masks.
+          Continue on part 2.3, after applying the mask, I added all the images together, as well as the final layer of the Gaussian (since the Laplacian is a difference between the Gaussians, 
+          which means the lowest frequency information is missing if we simply just add the Laplacian without the final blurred layer of the Gaussian).
+        </p>
+        <p>
+          Here is the result of the Oraple... and other images I chose. 
         </p>
         
         <div class="three-images" data-group="p24a">
@@ -300,8 +309,8 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
         </div>
         
         <figure class="widefig" data-group="p24e">
-          <img src="./media/mask_banana_cucumber.png" alt="Mask Banana and Cucumber" />
-          <figcaption>Mask Banana and Cucumber</figcaption>
+          <img src="./media/mask_banana_cucumber.png" alt="Mask Banana and Cucumber (irregular mask)" />
+          <figcaption>Mask Banana and Cucumber (irregular mask)</figcaption>
         </figure>
         
         <div class="gallery" data-group="p24e">

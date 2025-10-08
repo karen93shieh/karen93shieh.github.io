@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 3 · CS180</title>
+
+  <!-- Pre-paint theme (same key/logic as other pages) -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme');
+        const initial = (saved === 'light' || saved === 'dark')
+          ? saved
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', initial);
+      } catch { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
+
+  <!-- Reuse site-wide styles + small P3 helpers -->
+  <link rel="stylesheet" href="../1/styles.css?v=1" />
+  <link rel="stylesheet" href="./p3.css?v=1" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="crumbs">
+      <a href="../index.html">← Back to Home</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </nav>
+
+    <header class="hero">
+      <h1>Project 3: Image Mosaicing</h1>
+      <p class="subtitle">
+        Image registration, projective warping, resampling, and compositing to create seamless image mosaics (panorama).
+      </p>
+      <ul class="meta">
+        <li><strong>Date:</strong> Oct 2025</li>
+        <li><strong>Course:</strong> CS180</li>
+      </ul>
+    </header>
+
+    <main class="grid">
+
+      <!-- Summary -->
+      <section class="summary">
+        <h2>Project Overview</h2>
+        <p>
+          This project explores image mosaicing by implementing homography recovery, projective warping, and image blending from scratch. 
+          I shot photographs with projective transformations, computed homographies using point correspondences, implemented two interpolation 
+          methods (nearest neighbor and bilinear), and create seamless mosaics using Laplacian blending.
+        </p>
+        <p>
+          This project is spearated into two parts: Part A uses manual selection of point correspondences, while Part B uses Harris corner detection.
+          Currently, Part A is completed, while Part B is in progress.
+        </p>
+        <p class="callout">
+          Tip: Click any image to open a lightbox gallery.
+        </p>
+      </section>
+
+      <!-- Part A.1: Shoot and digitize pictures -->
+      <article class="card">
+        <h2>A.1 — Shoot and Digitize Pictures</h2>
+        
+        <h3>Image Acquisition</h3>
+        <p>
+          Per the project description, I shot 3 images with projective transformations that are interiors of buildings (for easy corner selection). 
+          The images are shot with a phone, at a timeframe that's less than 5 seconds apart. 
+          The overlap percentage is around 70% for each image.
+
+        </p>
+        
+        <div class="two-images" data-group="a1-set1">
+          <figure><img src="./media/1_01.jpg" alt="Image set 1 - Image 1" /><figcaption>Set 1 - Image 1</figcaption></figure>
+          <figure><img src="./media/1_02.jpg" alt="Image set 1 - Image 2" /><figcaption>Set 1 - Image 2</figcaption></figure>
+        </div>
+        
+        <div class="two-images" data-group="a1-set2">
+          <figure><img src="./media/2_01.jpg" alt="Image set 2 - Image 1" /><figcaption>Set 2 - Image 1</figcaption></figure>
+          <figure><img src="./media/2_03.jpg" alt="Image set 2 - Image 2" /><figcaption>Set 2 - Image 2</figcaption></figure>
+        </div>
+        
+        <div class="two-images" data-group="a1-set3">
+          <figure><img src="./media/3_01.jpg" alt="Image set 3 - Image 1" /><figcaption>Set 3 - Image 1</figcaption></figure>
+          <figure><img src="./media/3_02.jpg" alt="Image set 3 - Image 2" /><figcaption>Set 3 - Image 2</figcaption></figure>
+        </div>
+        
+        <h3>Projective Transform Analysis</h3>
+        <p>
+          For each pair of images, I fix the center of project (COP) and rotate my camera while capturing the images. 
+          This ensures that the COP is the same for each pair of images.
+        </p>
+      </article>
+
+      <!-- Part A.2: Recover homographies -->
+      <article class="card">
+        <h2>A.2 — Recover Homographies</h2>
+        
+        <h3>Point Correspondence Selection</h3>
+        <p>
+          I selected around 20-30 point correspondences between the image pairs using the <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html" target="_blank" rel="noopener">link</a>
+          provided in the project description. The correspondences were chosen to be well-distributed across the overlapping region 
+          so that the homography is calculated with less error. The manual selection of point correspondences is shown below.
+        </p>
+        
+        <div class="gallery stack" data-group="a2-correspondences">
+          <figure class="widefig"><img src="./media/correspondences_set1.png" alt="Point correspondences for set 1" /><figcaption>Set 1 - Point Correspondences</figcaption></figure>
+          <div class="two-images">
+            <figure><img src="./media/correspondences_set2.png" alt="Point correspondences for set 2" /><figcaption>Set 2 - Point Correspondences</figcaption></figure>
+            <figure><img src="./media/correspondences_set3.png" alt="Point correspondences for set 3" /><figcaption>Set 3 - Point Correspondences</figcaption></figure>
+          </div>
+        </div>
+
+        <h3>Homography Computation</h3>
+        <p>
+          I implemented the <code>computeH(im1_pts, im2_pts)</code> function to solve for the 3×3 homography matrix H 
+          using the system of equations Ah = b, where h contains the 8 unknown entries of H.
+        </p>
+        
+        <pre><code>def computeH(im1_pts, im2_pts):
+    # 1) Inputs: im1_pts = [(x1, y1), ...], im2_pts = [(u, v), ...]
+    # 2) Build A by adding two rows per correspondence:
+    #    [x1, y1, 1, 0, 0, 0, -u*x1, -u*y1]
+    #    [0,  0,  0, x1, y1, 1, -v*x1, -v*y1]
+    # 3) Build b by stacking targets: b = [u1, v1, u2, v2, ..., uN, vN]^T
+    # 4) Solve least squares h = argmin ||A h - b||  (8 unknowns)
+    # 5) Append scale term: h9 = 1 → h = [h1..h8, 1]
+    # 6) Reshape to 3x3: H ← reshape(h)
+    # 7) Return H</code></pre>
+
+        <h3>System of Equations</h3>
+        
+        <div class="matrix-eq">
+          <div class="mat-wrap"><table class="mat">
+            <tr><td>λu</td></tr>
+            <tr><td>λv</td></tr>
+            <tr><td>λ</td></tr>
+          </table></div>
+          <span>=</span>
+          <div class="mat-wrap"><table class="mat">
+            <tr><td>h1</td><td>h2</td><td>h3</td></tr>
+            <tr><td>h4</td><td>h5</td><td>h6</td></tr>
+            <tr><td>h7</td><td>h8</td><td>1</td></tr>
+          </table></div>
+          <span>×</span>
+          <div class="mat-wrap"><table class="mat">
+            <tr><td>x</td></tr>
+            <tr><td>y</td></tr>
+            <tr><td>1</td></tr>
+          </table></div>
+        </div>
+        <p>
+          Since we have 8 unknown entries in the homography matrix, we need at least 4 pairs of correspondences to solve for the homography matrix.
+          For each pair of correspondences, we can write the following system of equations:
+        </p>
+        <div class="math-equation">
+          <p>For each point correspondence (x, y) → (u, v):</p>
+          <p>u = (h₁x + h₂y + h₃) / (h₇x + h₈y + 1)</p>
+          <p>v = (h₄x + h₅y + h₆) / (h₇x + h₈y + 1)</p>
+
+          <p>which means</p>
+          <p>h₁x + h₂y + h₃ − u·h₇x − u·h₈y = u</p>
+          <p>h₄x + h₅y + h₆ − v·h₇x − v·h₈y = v</p>
+
+          <p>and in matrix form</p>
+          <div class="matrix-eq">
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>x</td><td>y</td><td>1</td><td>0</td><td>0</td><td>0</td><td>−u·x</td><td>−u·y</td></tr>
+              <tr><td>0</td><td>0</td><td>0</td><td>x</td><td>y</td><td>1</td><td>−v·x</td><td>−v·y</td></tr>
+            </table></div>
+            <span>×</span>
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>h₁</td></tr>
+              <tr><td>h₂</td></tr>
+              <tr><td>h₃</td></tr>
+              <tr><td>h₄</td></tr>
+              <tr><td>h₅</td></tr>
+              <tr><td>h₆</td></tr>
+              <tr><td>h₇</td></tr>
+              <tr><td>h₈</td></tr>
+            </table></div>
+            <span>=</span>
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>u</td></tr>
+              <tr><td>v</td></tr>
+            </table></div>
+          </div>
+        </div>
+
+        <p>
+          I selected 20+ pairs of correspondences for each image pair, and used least squares to solve for the homography matrix. 
+          The reason for not selecting only 4 pairs of correspondences is because I (human) do not have perfect precision in selecting the points, 
+          and any errors in the point selection will be amplified in the homography matrix. Having more pairs of correspondences and using least squares 
+          will help to reduce the error in the homography matrix.
+        </p>
+
+        <h3>Recovered Homography Matrices</h3>
+        <div class="matrix-display">
+          <p><strong>Set 1 Homography:</strong></p>
+          <pre><code>H₁ =
+[ 7.53138219e-01  -1.42825702e-02   1.60066520e+02 ]
+[ -5.56760054e-02  8.90119312e-01   2.84958573e+01 ]
+[ -2.45690598e-04 -7.30863144e-07   1.00000000e+00 ]</code></pre>
+
+          <p><strong>Set 2 Homography:</strong></p>
+          <pre><code>H₂ =
+[ 8.23954630e-01  -2.45916671e-03   1.54378398e+02 ]
+[ -1.57643081e-01  9.36131556e-01   3.15696705e+01 ]
+[ -3.30162836e-04  3.55366679e-06   1.00000000e+00 ]</code></pre>
+
+          <p><strong>Set 3 Homography:</strong></p>
+          <pre><code>H₃ =
+[ 8.70156907e-01  -1.29963136e-02   1.15671728e+02 ]
+[ -1.08865505e-01  9.43697138e-01   2.26303461e+01 ]
+[ -2.33177965e-04  -3.45300709e-06  1.00000000e+00 ]</code></pre>
+        </div>
+      </article>
+
+      <!-- Part A.3: Warp the images -->
+      <article class="card">
+        <h2>A.3 — Warp the Images</h2>
+        
+        <h3>Warping Implementation</h3>
+        <p>
+          I implemented two warping functions using inverse warping to avoid holes in the output image:
+        </p>
+        
+        <pre><code>def warpImageNearestNeighbor(im, H):
+    # 1) Invert the homography: map output -> input
+    # 2) Get input image size; create an output image of same size
+    # 3) For each output pixel (i, j):
+    #    a) Compute source homogeneous coord p = H_inv * [j, i, 1]^T
+    #    b) Dehomogenize: (x, y) = (p_x / p_w, p_y / p_w)
+    #    c) Round (x, y) to nearest integer
+    #    d) If inside input bounds, assign output[i, j] = input[round(y), round(x)]
+    # 4) Return output
+
+def warpImageBilinear(im, H, output_size=None):
+    # 1) Invert the homography: map output -> input
+    # 2) Determine output size (given or same as input)
+    # 3) Create an empty floating-point output image
+    # 4) For each output pixel (i, j):
+    #    a) Compute source homogeneous coord p = H_inv * [j, i, 1]^T
+    #    b) Dehomogenize to (x, y) in input space (float)
+    #    c) Find neighbors: x0=floor(x), x1=ceil(x), y0=floor(y), y1=ceil(y)
+    #    d) If any neighbor is out of bounds, continue
+    #    e) Compute bilinear weights using dx = x - x0, dy = y - y0
+    #    f) value = I[y0,x0]*(1-dx)*(1-dy) + I[y0,x1]*dx*(1-dy)
+    #             + I[y1,x0]*(1-dx)*dy     + I[y1,x1]*dx*dy
+    #    g) Assign output[i, j] = value
+    # 5) Return output</code></pre>
+
+        <h3>Interpolation Comparison</h3>
+        <p>
+          The nearest neighbor interpolation is faster than the bilinear interpolation 
+          (for the three images, the nearest neighbor interpolation took around 22 seconds, while the bilinear interpolation took around 52 seconds), 
+          but the bilinear interpolation is more accurate and smoother. One can clearly see that with the nearest neighbor interpolation method, the
+          shadows are chunky (not smooth), while for the bilinear interpolation, the shadows are smooth. 
+        </p>
+
+        <h3>Image Rectification</h3>
+        <p>
+          Here are the results for applying homograph-based warping to recitfy images. 
+          The four corners are selected from the image, and mapped to a rectangle (I estimated the corners of the mapping because
+          the images are not perfectly squared, and the ratio of the edges are not 1:1).
+        </p>
+        
+        <div class="gallery stack" data-group="a3-interpolation">
+          <figure><img src="./media/rectification_1.png" alt="Rectification 1" /><figcaption>Rectification 1</figcaption></figure>
+          <figure><img src="./media/rectification_2.png" alt="Rectification 2" /><figcaption>Rectification 2</figcaption></figure>
+          <figure><img src="./media/rectification_3.png" alt="Rectification 3" /><figcaption>Rectification 3</figcaption></figure>
+        </div>
+
+        
+        
+        <!-- <div class="gallery" data-group="a3-rectification">
+          <figure><img src="./media/rectification_1_original.jpg" alt="Original image with rectangular object" /><figcaption>Original Image</figcaption></figure>
+          <figure><img src="./media/rectification_1_result.jpg" alt="Rectified image" /><figcaption>Rectified Result</figcaption></figure>
+          <figure><img src="./media/rectification_2_original.jpg" alt="Second rectification original" /><figcaption>Original Image 2</figcaption></figure>
+          <figure><img src="./media/rectification_2_result.jpg" alt="Second rectification result" /><figcaption>Rectified Result 2</figcaption></figure>
+        </div> -->
+      </article>
+
+      <!-- Part A.4: Blend images into a mosaic -->
+      <article class="card">
+        <h2>A.4 — Blend Images into a Mosaic</h2>
+        
+        <h3>Mosaic Creation Process</h3>
+        <p>
+          With all the methods implemented, I can now create a mosaic. From Project 2, I implemented a Laplacian stack blending method.
+          I reused the code here and blend the images together after the warping. 
+        </p>
+
+        <h3>Weighted Blending</h3>
+        <p>
+          Used weighted averaging to reduce edge artifacts. Alpha values were set to 1 at the center 
+          of each (unwarped) image and fell off linearly to 0 at the edges.
+        </p>
+
+        <h3>Mosaic Results</h3>
+        
+        <h4>Mosaic 1</h4>
+        <div class="mosaic-layout" data-group="a4-mosaic1">
+          <div class="mosaic-source">
+            <figure><img src="./media/1_01.jpg" alt="Mosaic 1 source image 1" /><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="./media/1_02.jpg" alt="Mosaic 1 source image 2" /><figcaption>Source Image 2</figcaption></figure>
+          </div>
+          <div class="mosaic-results">
+            <figure class="mosaic-result"><img src="./media/mosaic1_result.png" alt="Mosaic 1 final result" /><figcaption>Final Mosaic</figcaption></figure>
+            <figure class="mosaic-result"><img src="./media/mosaic1_result_cropped.png" alt="Mosaic 1 cropped result" /><figcaption>Final Mosaic (Cropped)</figcaption></figure>
+          </div>
+        </div>
+
+        <h4>Mosaic 2</h4>
+        <div class="mosaic-layout" data-group="a4-mosaic2">
+          <div class="mosaic-source">
+            <figure><img src="./media/2_01.jpg" alt="Mosaic 2 source image 1" /><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="./media/2_03.jpg" alt="Mosaic 2 source image 2" /><figcaption>Source Image 2</figcaption></figure>
+          </div>
+          <div class="mosaic-results">
+            <figure class="mosaic-result"><img src="./media/mosaic2_result.png" alt="Mosaic 2 final result" /><figcaption>Final Mosaic</figcaption></figure>
+            <figure class="mosaic-result"><img src="./media/mosaic2_result_cropped.png" alt="Mosaic 2 cropped result" /><figcaption>Final Mosaic (Cropped)</figcaption></figure>
+          </div>
+        </div>
+
+        <h4>Mosaic 3</h4>
+        <div class="mosaic-layout" data-group="a4-mosaic3">
+          <div class="mosaic-source">
+            <figure><img src="./media/3_01.jpg" alt="Mosaic 3 source image 1" /><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="./media/3_02.jpg" alt="Mosaic 3 source image 2" /><figcaption>Source Image 2</figcaption></figure>
+          </div>
+          <div class="mosaic-results">
+            <figure class="mosaic-result"><img src="./media/mosaic3_result.png" alt="Mosaic 3 final result" /><figcaption>Final Mosaic</figcaption></figure>
+            <figure class="mosaic-result"><img src="./media/mosaic3_result_cropped.png" alt="Mosaic 3 cropped result" /><figcaption>Final Mosaic (Cropped)</figcaption></figure>
+          </div>
+        </div>
+
+        <h3>Blending Analysis</h3>
+        <p>
+          The blending results are smooth, and the edges are not visible. The Laplacian blending method is able to blend the images together by
+          taking the high frequency and low frequency of the images, and blending them together.
+        </p>
+      </article>
+
+      <!-- Bells & Whistles -->
+      <!-- <article class="card">
+        <h2>✨ Bells & Whistles</h2>
+        
+        <details>
+          <summary>Advanced Blending Techniques</summary>
+          <p>[Optional: Laplacian pyramid blending, advanced alpha channel handling, etc.]</p>
+          <div class="gallery" data-group="bells-advanced">
+            <figure><img src="./media/advanced_blending.jpg" alt="Advanced blending result" /><figcaption>Advanced Blending Result</figcaption></figure>
+          </div>
+        </details>
+
+        <details>
+          <summary>Multi-Image Mosaics</summary>
+          <p>[Optional: Mosaics with more than 2 images]</p>
+          <div class="gallery" data-group="bells-multi">
+            <figure><img src="./media/multi_mosaic.jpg" alt="Multi-image mosaic" /><figcaption>Multi-Image Mosaic</figcaption></figure>
+          </div>
+        </details>
+
+        <details>
+          <summary>Panoramic Mosaics</summary>
+          <p>[Optional: Wide-angle panoramic mosaics]</p>
+          <div class="gallery" data-group="bells-pano">
+            <figure><img src="./media/panoramic_mosaic.jpg" alt="Panoramic mosaic" /><figcaption>Panoramic Mosaic</figcaption></figure>
+          </div>
+        </details>
+      </article> -->
+
+      <!-- Resources -->
+      <article class="card">
+        <h2>Resources</h2>
+        <ul>
+          <li><a href="https://cal-cs180.github.io/fa25/hw/proj3/" target="_blank" rel="noopener">Project Description</a></li>
+          <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
+          <li><a href="../index.html">Home</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Lightbox modal (reused from other projects for consistency) -->
+    <div id="lightbox" class="lb" aria-hidden="true">
+      <button class="lb-close" aria-label="Close">×</button>
+      <button class="lb-prev" aria-label="Previous">‹</button>
+      <img class="lb-img" alt="" />
+      <div class="lb-cap" role="note"></div>
+      <button class="lb-next" aria-label="Next">›</button>
+    </div>
+
+    <footer class="foot">
+      © <span id="y"></span> Karen Shieh — CS180
+    </footer>
+  </div>
+
+  <!-- Lightbox JS (identical behavior to other projects) -->
+  <script>
+  (() => {
+    const modal = document.getElementById('lightbox');
+    const imgEl = modal.querySelector('.lb-img');
+    const capEl = modal.querySelector('.lb-cap');
+    const btnPrev = modal.querySelector('.lb-prev');
+    const btnNext = modal.querySelector('.lb-next');
+    const btnClose = modal.querySelector('.lb-close');
+
+    const groups = {};
+    document.querySelectorAll('.gallery[data-group], .widefig[data-group], .mosaic-layout[data-group], .two-images[data-group]').forEach(container => {
+      const groupName = container.dataset.group;
+      const items = Array.from(container.querySelectorAll('img'));
+      groups[groupName] = items;
+      items.forEach((img, idx) => {
+        img.dataset.group = groupName;
+        img.dataset.index = idx;
+        img.addEventListener('click', (e) => {
+          const t = e.currentTarget;
+          currentGroup = t.dataset.group;
+          currentIndex = parseInt(t.dataset.index, 10);
+          openLightbox();
+        });
+      });
+    });
+
+    let currentGroup = null;
+    let currentIndex = 0;
+    let prevFocus = null;
+
+    function openLightbox() {
+      const list = groups[currentGroup];
+      if (!list || !list.length) return;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+      prevFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      modal.setAttribute('aria-hidden','false');
+      btnClose.focus();
+      addListeners(true);
+    }
+    function closeLightbox() {
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      addListeners(false);
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function show(src, alt) { imgEl.src = src; imgEl.alt = alt; capEl.textContent = alt; }
+    function next() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex + 1) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function prev() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function onKey(e) {
+      if (modal.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    }
+    function onBackdropClick(e) { if (e.target === modal) closeLightbox(); }
+    let x0 = null;
+    function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
+    function onTouchEnd(e){
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+      x0 = null;
+    }
+    function addListeners(on) {
+      const m = on ? 'addEventListener' : 'removeEventListener';
+      document[m]('keydown', onKey);
+      modal[m]('click', onBackdropClick);
+      imgEl[m]('touchstart', onTouchStart, {passive:true});
+      imgEl[m]('touchend', onTouchEnd, {passive:true});
+    }
+    btnClose.addEventListener('click', closeLightbox);
+    btnNext.addEventListener('click', next);
+    btnPrev.addEventListener('click', prev);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); });
+  })();
+  </script>
+
+  <!-- Year + Theme toggle -->
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    function syncButton(){
+      const mode = root.getAttribute('data-theme');
+      if (mode === 'light') { icon.textContent = '🌞'; label.textContent = 'Light'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark'; }
+    }
+    syncButton();
+    btn.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncButton();
+    });
+  </script>
+</body>
+</html>

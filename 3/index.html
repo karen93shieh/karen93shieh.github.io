@@ -191,6 +191,44 @@
           </div>
         </div>
 
+        <div class="math-equation">
+          <p>With the minimum 4 correspondences (i = 1…4), the stacked linear system A h = b:</p>
+          <div class="matrix-eq">
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>x₁</td><td>y₁</td><td>1</td><td>0</td><td>0</td><td>0</td><td>−u₁·x₁</td><td>−u₁·y₁</td></tr>
+              <tr><td>0</td><td>0</td><td>0</td><td>x₁</td><td>y₁</td><td>1</td><td>−v₁·x₁</td><td>−v₁·y₁</td></tr>
+              <tr><td>x₂</td><td>y₂</td><td>1</td><td>0</td><td>0</td><td>0</td><td>−u₂·x₂</td><td>−u₂·y₂</td></tr>
+              <tr><td>0</td><td>0</td><td>0</td><td>x₂</td><td>y₂</td><td>1</td><td>−v₂·x₂</td><td>−v₂·y₂</td></tr>
+              <tr><td>x₃</td><td>y₃</td><td>1</td><td>0</td><td>0</td><td>0</td><td>−u₃·x₃</td><td>−u₃·y₃</td></tr>
+              <tr><td>0</td><td>0</td><td>0</td><td>x₃</td><td>y₃</td><td>1</td><td>−v₃·x₃</td><td>−v₃·y₃</td></tr>
+              <tr><td>x₄</td><td>y₄</td><td>1</td><td>0</td><td>0</td><td>0</td><td>−u₄·x₄</td><td>−u₄·y₄</td></tr>
+              <tr><td>0</td><td>0</td><td>0</td><td>x₄</td><td>y₄</td><td>1</td><td>−v₄·x₄</td><td>−v₄·y₄</td></tr>
+            </table></div>
+            <span>×</span>
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>h₁</td></tr>
+              <tr><td>h₂</td></tr>
+              <tr><td>h₃</td></tr>
+              <tr><td>h₄</td></tr>
+              <tr><td>h₅</td></tr>
+              <tr><td>h₆</td></tr>
+              <tr><td>h₇</td></tr>
+              <tr><td>h₈</td></tr>
+            </table></div>
+            <span>=</span>
+            <div class="mat-wrap"><table class="mat">
+              <tr><td>u₁</td></tr>
+              <tr><td>v₁</td></tr>
+              <tr><td>u₂</td></tr>
+              <tr><td>v₂</td></tr>
+              <tr><td>u₃</td></tr>
+              <tr><td>v₃</td></tr>
+              <tr><td>u₄</td></tr>
+              <tr><td>v₄</td></tr>
+            </table></div>
+          </div>
+        </div>
+
         <p>
           I selected 20+ pairs of correspondences for each image pair, and used least squares to solve for the homography matrix. 
           The reason for not selecting only 4 pairs of correspondences is because I (human) do not have perfect precision in selecting the points, 
@@ -294,15 +332,23 @@ def warpImageBilinear(im, H, output_size=None):
           With all the methods implemented, I can now create a mosaic. From Project 2, I implemented a Laplacian stack blending method.
           I reused the code here and blend the images together after the warping. 
         </p>
-
-        <h3>Weighted Blending</h3>
         <p>
-          Used weighted averaging to reduce edge artifacts. Alpha values were set to 1 at the center 
-          of each (unwarped) image and fell off linearly to 0 at the edges.
+          To create the mosaic, I first shot two images with projective transformations, and then used the homography matrix to warp the images.
+          The interpolation method I used is the bilinear interpolation.
+          The canvas for the images are "extended" (appended with a bunch of black pixels surrounding the original image) so that the images can be stitched together.
+          Then, I blended the images together using the Laplacian stack blending method, adjusting the layers so the edges are not visible.
         </p>
 
-        <h3>Mosaic Results</h3>
+        <h3>Blending Analysis</h3>
+        <p>
+          The blending results are smooth, and the edges are not visible. The Laplacian blending method is able to blend the images together by
+          taking the high frequency and low frequency of the images, and blending them together.
+        </p>
         
+        <h3>Mosaic Results</h3>
+        <p>
+          Here are the final results °˖✧◝(⁰▿⁰)◜✧˖°
+        </p>
         <h4>Mosaic 1</h4>
         <div class="mosaic-layout" data-group="a4-mosaic1">
           <div class="mosaic-source">
@@ -339,11 +385,7 @@ def warpImageBilinear(im, H, output_size=None):
           </div>
         </div>
 
-        <h3>Blending Analysis</h3>
-        <p>
-          The blending results are smooth, and the edges are not visible. The Laplacian blending method is able to blend the images together by
-          taking the high frequency and low frequency of the images, and blending them together.
-        </p>
+        
       </article>
 
       <!-- Bells & Whistles -->

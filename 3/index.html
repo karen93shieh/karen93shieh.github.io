@@ -853,6 +853,33 @@ def warpImageBilinear(im, H, output_size=None):
       localStorage.setItem('theme', next);
       syncButton();
     });
+
+    // Outline navigation highlighting
+    function updateActiveSection() {
+      const sections = document.querySelectorAll('section[id], article[id]');
+      const navLinks = document.querySelectorAll('.outline-nav a');
+      
+      let currentSection = '';
+      
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 100 && rect.bottom >= 100) {
+          currentSection = section.id;
+        }
+      });
+      
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentSection) {
+          link.classList.add('active');
+        }
+      });
+    }
+    
+    // Update on scroll
+    window.addEventListener('scroll', updateActiveSection);
+    // Update on page load
+    document.addEventListener('DOMContentLoaded', updateActiveSection);
   </script>
 </body>
 </html>

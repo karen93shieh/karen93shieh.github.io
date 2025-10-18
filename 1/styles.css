@@ -72,6 +72,12 @@ body{
   color: white;
 }
 
+.outline-nav a.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
 /* Remove margin adjustment - outline should not affect layout */
 
 /* Nav + toggle */

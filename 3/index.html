@@ -611,6 +611,18 @@ def warpImageBilinear(im, H, output_size=None):
     # 2) Recompute H using the longest list of inliers inliers
     # 3) Return final H</code></pre>
 
+        <h3>RANSAC Inliers Visualization</h3>
+        <p>
+          The following image shows the inliers detected by RANSAC. Inliers are the feature matches that are consistent 
+          with the estimated homography matrix, while outliers (shown in white) are matches that don't fit the model 
+          and are filtered out by the RANSAC algorithm.
+        </p>
+        
+        <figure class="widefig" data-group="b4-ransac">
+          <img src="./media/1_matches_inliers_outliers.png" alt="RANSAC inliers visualization" />
+          <figcaption>RANSAC Inliers</figcaption>
+        </figure>
+
          <h3>Blend Images into a Mosaic</h3>
          <p>
            After computing H, we have all the information we needed. We can proceed as what we did in Part A.4. 

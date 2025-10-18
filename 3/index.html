@@ -54,13 +54,21 @@
           methods (nearest neighbor and bilinear), and create mosaics using Laplacian blending.
         </p>
         <p>
-          This project is spearated into two parts: Part A uses manual selection of point correspondences, while Part B uses Harris corner detection.
-          Currently, Part A is completed, while Part B is in progress.
+          This project is spearated into two parts: Part A uses manual selection of point correspondences, while Part B uses Harris corner detection
+          following the approach described in <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf" target="_blank" rel="noopener">Multi-Image Matching using Multi-Scale Oriented Patches</a>.
         </p>
         <p class="callout">
           Tip: Click any image to open a lightbox gallery.
         </p>
       </section>
+
+      <!-- Part A header -->
+      <article class="card assignment-part">
+        <h2>Part A — Manual Stitching</h2>
+        <p>
+          This section documents manual correspondence selection and homography-based mosaicing.
+        </p>
+      </article>
 
       <!-- Part A.1: Shoot and digitize pictures -->
       <article class="card">
@@ -388,6 +396,267 @@ def warpImageBilinear(im, H, output_size=None):
         
       </article>
 
+      <!-- Part B header -->
+      <article class="card assignment-part" id="part-b">
+        <h2>Part B — Automatic Feature Matching and Stitching</h2>
+        <p>
+          The goal of this part is to automatically stitch images into mosaics by detecting corners (features), finding the descriptors,
+          matching the descriptors across images, estimating homographies with RANSAC, and combining the images into a mosaic using Laplacian blending.
+          The pipeline follows Brown et al., <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf" target="_blank" rel="noopener">"Multi-Image Matching using Multi-Scale Oriented Patches"</a> (with simplifications and assumptions).
+        </p>
+      </article>
+
+      <!-- Part B.1: Harris Corner Detection -->
+      <article class="card" id="b1">
+        <h2>B.1 — Detecting Corner Features (Harris + ANMS)</h2>
+        <!-- <p>
+          Start with a single-scale Harris Interest Point Detector (Section 2 in Brown et al.). Sub-pixel accuracy and
+          multi-scale are not required. You may reuse provided starter code (e.g., <code>harris.py</code>) for the core
+          detector. Then implement Adaptive Non-Maximal Suppression (ANMS, Section 3) to select well-distributed strong
+          corners. If needed, you can temporarily skip ANMS and use a random subset to proceed, then return to ANMS.
+        </p>
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Detected Harris corners overlaid on the image.</li>
+          <li>Chosen corners after ANMS overlaid on the image.</li>
+        </ul> -->
+        <h3>Corner Detection (Harris)</h3>
+        <p>
+          We use Harris for corner detection. The intuition of Harris's algorithm is using the fact that 
+          the change in both x, y value is big at a corner (big derivative). Hence, if we find the location 
+          that has big change in x and y, we are probably at a corner. In this project, we use the simple assumptions
+          that the image is not rotated, and we do not implement multi-scale. 
+        </p>
+        <h3>Adaptive Non-Maximal Suppression (ANMS)</h3>
+        <p>
+          After having a collection of points from the corner detection algorithm, I use ANMS to have a 
+          relatively equal distribution of corners in the image. In this way, the corners are well spreaded out,
+          and makes computing H more accurate (because there is representations for the entire picture, and not just
+          at the locations where there are strong signals for corners). 
+        </p>
+        <p>
+          The way the ANMS work is that for each corner point, we find the minimum distance to any other corner point 
+          that has a high corner response (intensity) by some constant factor (c_robust, which is 0.9 in the paper). 
+          We then sort the corners by the mininum radius (descending order, so the biggest radius go first), 
+          and pick the top target_num coordinates.  
+          This ensures that we select corners that are both strong and well-distributed across the image.
+        </p>
+        
+        <pre><code>def find_ANMS(intensity, coords, c_robust=0.9, target_num=500):
+    # 1) Inputs: intensity = all intensity calculated from Haris, coords = corner coordinates
+    # 2) Initialize: n = number of corners, vals = intensity values at corner locations
+    # 3) Initialize: r = array of minimum distances (initially infinity)
+    # 4) For each corner i:
+    #    a) Find all corners j where vals[i] < vals[j] * c_robust 
+    #    b) If any stronger corners exist:
+    #       - Compute squared distances between the points (i to any j)
+    #       - Find minimum distance: r[i] = mininum radius (squared distance)
+    # 5) Select top target_num corners with largest r values
+    # 6) Return selected corner coordinates</code></pre>
+
+        <h3>Harris Corner Detection Results</h3>
+        <p>
+          The Harris corner detector identifies points with high intensity gradients in both x and y directions.
+          After applying ANMS, we obtain a well-distributed set of strong corners suitable for feature matching.
+        </p>
+        
+        <div class="gallery stack" data-group="b1-corners">
+          <figure><img src="./media/1_01_corners.png" alt="Set 1-1 Corners" /><figcaption>Set 1-1 Corners</figcaption></figure>
+          <figure><img src="./media/1_02_corners.png" alt="Set 1-2 Corners" /><figcaption>Set 1-2 Corners</figcaption></figure>
+        </div>
+      </article>
+
+      <!-- Part B.2: Feature Descriptor Extraction -->
+      <article class="card" id="b2">
+        <h2>B.2 — Feature Descriptor Extraction</h2>
+        <!-- <p>
+          Implement axis-aligned 8×8 descriptors sampled from a larger 40×40 window around each interest point (Section 4).
+          Apply bias/gain normalization to each descriptor. Ignore rotation invariance and wavelet transforms for this
+          implementation; the emphasis is on stable, blurred patches from the 40×40 window downsampled to 8×8.
+        </p>
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Extracted, normalized 8×8 feature descriptors.</li>
+          <li>Visualizations showing several extracted feature patches.</li>
+        </ul> -->
+         <h3>Feature Descriptor</h3>
+         <p>
+           After getting a collection of well-spreaded corners, the next thing to do is to "describe" the corners.
+           Using method mentioned in Brown et al.'s work, I extracted a 40x40 patch surrounding the corner pixel, 
+           downsample it, and normalize the value. The normalization ensures that the pixel intensity does not effect 
+           the detection of feature matching in the next step.
+         </p>
+         
+         <pre><code>def get_descriptor(img, coords, radius=20, size=8):
+    # 1) Inputs: img = blurred input image, 
+    #    coords = corner coordinates, 
+    #    radius = patch radius, 
+    #    size = output descriptor radius
+    # 2) Initialize: descriptors = empty array to store feature descriptors
+    # 3) For each corner coordinate i:
+    #    a) Extract patch: patch = get the radius x radius square patch (window) around the corner
+    #    b) Downsample: sample = downsample the patch to size x size         
+    #    c) Normalize: norm = z score noramlize the intensities    # Bias/gain normalization
+    #    d) Store: descriptors[i] = norm
+    # 4) Return descriptors array</code></pre>
+
+         <h3>Feature Descriptor Visualization</h3>
+         <p>
+           The following image shows examples of extracted feature descriptors from different corners in the image.
+           Each descriptor is an 8×8 normalized patch that captures the local appearance around the corner point.
+         </p>
+         
+         <figure class="widefig" data-group="b2-descriptors"><img src="./media/1_01_descriptors.png" alt="Feature descriptors visualization" /><figcaption>Feature Descriptors Extracted from Corners</figcaption></figure>
+      </article>
+
+      <!-- Part B.3: Feature Matching -->
+      <article class="card" id="b3">
+        <h2>B.3 — Feature Matching</h2>
+        <!-- <p>
+          Match descriptors between image pairs (Section 5). Use Lowe's ratio test between the best and second-best
+          matches for robust thresholding (see Figure 6b in the paper for guidance). Ignore Section 6.
+        </p>
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Matched feature correspondences visualized between image pairs.</li>
+        </ul> -->
+        <h3>Feature Matching</h3>
+         <p>
+            After getting the descriptors from B.2, we now need to match them across the two different images. Here, we used
+            Lowe's trick, where for every 8x8 patch in the first image, we find the 2 closest 8x8 patches on the second image
+            (kNN with k=2, and metric being Euclidean). Then, we compare the ratio of the 1-NN and 2-NN. If the ratio is smaller 
+            than some threshold (0.5 in this case), we say that the patch in image 1 matches with the 1-NN. If the ratio is bigger
+            than the threshold, we reject the pairing (and that corner gets removed from the list of corners). 
+         </p>
+          <p>
+            The intuition behind Lowe's trick is that if there's one match that's really, really good, the ratio between 1-NN/2-NN would
+            be really small (since 1-NN would be small, and 2-NN would be big). If there are two matches that are equally good, it means 
+            neither of them are actually good, and the ratio would be closed to 1. 
+          </p>
+          
+          <h3>Feature Matching Results</h3>
+          <p>
+            The following images show the feature matching results using Lowe's ratio test.
+            The first image shows all the matches, while the second shows the matches with rejected points (white).
+          </p>
+          
+          <div class="gallery stack" data-group="b3-matching">
+            <figure><img src="./media/1_matches.png" alt="All feature matches" /><figcaption>All feature matches</figcaption></figure>
+            <figure><img src="./media/1_all_pts_with_match.png" alt="All corners" /><figcaption>All corners</figcaption></figure>
+          </div>
+          
+          <h3>Threshold Comparison</h3>
+          <p>
+            The following images show how different threshold values affect the quantity of feature matches.
+            Lower thresholds result in fewer but more reliable matches, while higher thresholds include more matches but with potentially lower quality.
+            (Click image to enlarge.)
+          </p>
+          
+          <div class="gallery" data-group="b3-thresholds">
+            <figure><img src="./media/1_matches_2.png" alt="Threshold 0.2" /><figcaption>Threshold 0.2</figcaption></figure>
+            <figure><img src="./media/1_matches_3.png" alt="Threshold 0.3" /><figcaption>Threshold 0.3</figcaption></figure>
+            <figure><img src="./media/1_matches_5.png" alt="Threshold 0.5" /><figcaption>Threshold 0.5</figcaption></figure>
+            <figure><img src="./media/1_matches_8.png" alt="Threshold 0.8" /><figcaption>Threshold 0.8</figcaption></figure>
+          </div>
+      </article>
+
+      <!-- Part B.4: RANSAC for Robust Homography -->
+      <article class="card" id="b4">
+        <h2>B.4 — RANSAC for Robust Homography</h2>
+        <!-- <p>
+          Implement 4-point RANSAC to estimate homographies robustly from noisy matches. Then reuse the mosaicing
+          pipeline from Part A to warp and blend images. Show manual vs. automatic stitching side by side. Produce at
+          least three mosaics.
+        </p>
+        <h3>Deliverables</h3>
+        <ul>
+          <li>4-point RANSAC implementation (from scratch).</li>
+          <li>Comparison of manual and automatic stitching results.</li>
+          <li>≥ 3 automatic mosaics.</li>
+        </ul> -->
+        <h3>RANSAC</h3>
+        <p>
+          The idea of RANSAC is with n iterations, select 4 pairs of points at random and compute the homography matrix H,
+          and based on that H, calculate how many inliers existed (inlier is defined as when applying
+          H to coordinates [of one image], the resulting coordinate is within eplison of the actual coordinate [of the other image]). 
+          The H with most inliers are kept. After the n iterations, we use all the inliers associated with the best H to recompute H_final,
+          and that is final homography matrix H.
+        </p>
+        <pre><code>def RANSAC(matches, n, eplison):
+    # 1) Repeat n times:
+    #    a) Pick 4 random pairs
+    #    b) Compute H from these 4 pairs
+    #    c) Count how many matches H explains well (inliers)
+    #       i) Keep the longest list of inliers
+    #       ii) Keep the H with most inliers
+    # 2) Recompute H using the longest list of inliers inliers
+    # 3) Return final H</code></pre>
+
+         <h3>Blend Images into a Mosaic</h3>
+         <p>
+           After computing H, we have all the information we needed. We can proceed as what we did in Part A.4. 
+           We warp the images using the homography matrix H using bilinear interpolation,
+           and blend the images using Laplacian blending. The result is shown below.
+         </p>
+         
+         <h3>Manual vs Automatic Mosaicing Comparison</h3>
+         <p>
+           The following images compare manual correspondence selection (Part A) with automatic feature matching (Part B).
+           Because I maunally selected 20+ points in Part A, the results between Part A (manual) and Part B (automatic)
+           is not as obvious. 
+         </p>
+         
+         <div class="gallery stack" data-group="b4-comparison">
+           <div class="two-images">
+             <figure><img src="./media/1_01.jpg" alt="Original image 1" /><figcaption>Original Image 1</figcaption></figure>
+             <figure><img src="./media/1_02.jpg" alt="Original image 2" /><figcaption>Original Image 2</figcaption></figure>
+           </div>
+           <div class="two-images">
+             <figure><img src="./media/mosaic1_result.png" alt="Manual mosaic" /><figcaption>Manual Mosaic (Part A)</figcaption></figure>
+             <figure><img src="./media/mosaic1_result_B.png" alt="Automatic mosaic" /><figcaption>Automatic Mosaic (Part B)</figcaption></figure>
+           </div>
+         </div>
+
+         <h3>All Mosaic Results</h3>
+         <p>
+           The following gallery shows all mosaic results comparing manual correspondence selection (Part A) 
+           with automatic feature matching (Part B) for all three image sets. (The images slightly moves from 
+           Part A to Part B is due to manual cropping of the black border.)
+         </p>
+         
+         <div class="gallery stack" data-group="b4-all-mosaics">
+           <div class="two-images">
+             <figure><img src="./media/mosaic1_result_cropped.png" alt="Manual mosaic 1" /><figcaption>Set 1 - Manual Mosaic</figcaption></figure>
+             <figure><img src="./media/mosaic1_result_cropped_B.png" alt="Automatic mosaic 1" /><figcaption>Set 1 - Automatic Mosaic</figcaption></figure>
+           </div>
+           <div class="two-images">
+             <figure><img src="./media/mosaic2_result_cropped.png" alt="Manual mosaic 2" /><figcaption>Set 2 - Manual Mosaic</figcaption></figure>
+             <figure><img src="./media/mosaic2_result_cropped_B.png" alt="Automatic mosaic 2" /><figcaption>Set 2 - Automatic Mosaic</figcaption></figure>
+           </div>
+           <div class="two-images">
+             <figure><img src="./media/mosaic3_result_cropped.png" alt="Manual mosaic 3" /><figcaption>Set 3 - Manual Mosaic</figcaption></figure>
+             <figure><img src="./media/mosaic3_result_cropped_B.png" alt="Automatic mosaic 3" /><figcaption>Set 3 - Automatic Mosaic</figcaption></figure>
+           </div>
+         </div>
+
+      </article>
+
+      <!-- Part B.5: Bells & Whistles -->
+      <!-- <article class="card" id="b5">
+        <h2>B.5 — Bells & Whistles</h2>
+        <p>Choose at least one extension (mandatory for CS280A, extra for CS180):</p>
+        <ul>
+          <li>Multiscale processing for corner detection and feature description.</li>
+          <li>Rotation-invariant descriptors.</li>
+          <li>Panorama recognition from an unordered set of images.</li>
+        </ul>
+        <h3>Submission</h3>
+        <ul>
+          <li>Include code and webpage with all Part A and Part B deliverables.</li>
+          <li>Submit the public URL to the class gallery via the provided form.</li>
+        </ul>
+      </article> -->
+
       <!-- Bells & Whistles -->
       <!-- <article class="card">
         <h2>✨ Bells & Whistles</h2>
@@ -422,6 +691,7 @@ def warpImageBilinear(im, H, output_size=None):
         <h2>Resources</h2>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj3/" target="_blank" rel="noopener">Project Description</a></li>
+          <li><a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf" target="_blank" rel="noopener">Multi-Image Matching using Multi-Scale Oriented Patches</a></li>
           <li><a href="https://github.com/karen93shieh/karen93shieh.github.io" target="_blank" rel="noopener">Source code</a></li>
           <li><a href="../index.html">Home</a></li>
         </ul>

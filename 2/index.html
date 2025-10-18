@@ -24,6 +24,17 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- Static Outline Navigation -->
+    <nav class="outline-nav" id="outlineNav">
+      <h3>Outline</h3>
+      <ul>
+        <li><a href="#overview">Project Overview</a></li>
+        <li><a href="#part1">Part 1 — Fun with Filters</a></li>
+        <li><a href="#part2">Part 2 — Fun with Frequencies!</a></li>
+        <li><a href="#resources">Resources</a></li>
+      </ul>
+    </nav>
+
     <nav class="crumbs">
       <a href="../index.html">← Back to Home</a>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
@@ -46,7 +57,7 @@
     <main class="grid">
 
       <!-- Summary -->
-      <section class="summary">
+      <section class="summary" id="overview">
         <h2>Project Overview</h2>
         <p>
           This project builds visual intuition for spatial filtering and frequency representations. I first implement convolution and edge detectors (finite differences and derivative-of-Gaussian),
@@ -58,7 +69,7 @@
       </section>
 
       <!-- Part 1 -->
-      <article class="card">
+      <article class="card" id="part1">
         <h2>Part 1 — Fun with Filters</h2>
 
         <h3>1.1 Convolutions from Scratch</h3>
@@ -177,7 +188,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
       </article>
 
       <!-- Part 2 -->
-      <article class="card">
+      <article class="card" id="part2">
         <h2>Part 2 — Fun with Frequencies!</h2>
 
         <h3>2.1 Image “Sharpening” (Unsharp Mask)</h3>
@@ -344,7 +355,7 @@ box_kernel = np.ones((9, 9), dtype=float)  </code></pre>
       </article>
 
       <!-- Resources -->
-      <article class="card">
+      <article class="card" id="resources">
         <h2>Resources</h2>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj2/" target="_blank" rel="noopener">Project Description</a></li>

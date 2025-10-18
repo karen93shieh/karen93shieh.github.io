@@ -26,6 +26,17 @@
 
 <body>
   <div class="wrap">
+    <!-- Static Outline Navigation -->
+    <nav class="outline-nav" id="outlineNav">
+      <h3>Outline</h3>
+      <ul>
+        <li><a href="#part1">Part 1: Selfie</a></li>
+        <li><a href="#part2">Part 2: Architectural Perspective</a></li>
+        <li><a href="#part3">Part 3: The Dolly Zoom</a></li>
+        <li><a href="#links">Links</a></li>
+      </ul>
+    </nav>
+
     <nav class="crumbs">
       <a href="../index.html">← Back to Home</a>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
@@ -46,7 +57,7 @@
     <main class="grid">
 
       <!-- Part 1 -->
-      <article class="card">
+      <article class="card" id="part1">
         <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
         <p><strong>Description:</strong> Close up shot → Far shot with zoom</p>
         <p><strong>Summary:</strong> This happens because of <b>perspective distortion</b>. Taking a selfie up close with a wide-angle lense creates strong perspective distortion. Proportions look more natural when stepped back and zoomed in because the longer focal length compresses perspective.</p>
@@ -60,7 +71,7 @@
       </article>
 
       <!-- Part 2 -->
-      <article class="card">
+      <article class="card" id="part2">
         <h2>Part 2: Architectural Perspective Compression</h2>
         <p><strong>Description:</strong> Zoom in → Walk down</p>
         <p><strong>Summary:</strong> Zooming in from a distance flattens perspective; on the other hand, moving closer up exaggerates the depth.</p>
@@ -71,7 +82,7 @@
       </article>
 
       <!-- Part 3 -->
-      <article class="card">
+      <article class="card" id="part3">
         <h2>Part 3: The Dolly Zoom</h2>
         <p><strong>Description:</strong> The dolly zoom effect using static pictures.</p>
 
@@ -95,7 +106,7 @@
 
 
       <!-- Resources -->
-      <article class="card">
+      <article class="card" id="links">
         <h2>Links</h2>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj0/index.html" target="_blank" rel="noopener">Project Description</a></li>

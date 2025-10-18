@@ -22,6 +22,20 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- Static Outline Navigation -->
+    <nav class="outline-nav" id="outlineNav">
+      <h3>Outline</h3>
+      <ul>
+        <li><a href="#overview">Project Overview</a></li>
+        <li><a href="#section-a">Section A — Naive Approach</a></li>
+        <li><a href="#section-b">Section B — Image Pyramid</a></li>
+        <li><a href="#section-c">Section C — Bells and Whistles</a></li>
+        <li><a href="#section-d">Section D — Examples</a></li>
+        <li><a href="#appendix">Appendix</a></li>
+        <li><a href="#resources">Resources</a></li>
+      </ul>
+    </nav>
+
     <nav class="crumbs">
       <a href="../index.html">← Back to Home</a>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
@@ -45,7 +59,7 @@
 
     <main class="grid">
 
-      <section class="summary">
+      <section class="summary" id="overview">
         <h2>Project Overview</h2>
         <p>
             This project explores early computational photography technique through the work of Sergei Prokudin-Gorskii, 
@@ -74,7 +88,7 @@
       </section>
 
       <!-- Section A -->
-      <article class="card">
+      <article class="card" id="section-a">
         <h2>Section A — Naive Approach</h2>
         <!-- <p>
             <strong>Context:</strong> 
@@ -181,7 +195,7 @@
       </article>
 
       <!-- Section B -->
-      <article class="card">
+      <article class="card" id="section-b">
         <h2>Section B — Image Pyramid</h2>
         <!-- <p>
           <strong>Context:</strong> 
@@ -313,7 +327,7 @@
       </article>
 
       <!-- Section C -->
-      <article class="card">
+      <article class="card" id="section-c">
         <h2>Section C — Bells and Whistles</a></h2>
         <p>
           The edge-detection extension strengthens the alignment process by focusing on structural
@@ -385,7 +399,7 @@
 
 
       <!-- Section D -->
-      <article class="card">
+      <article class="card" id="section-d">
         <h2>Section D — Examples from the <a href="https://www.loc.gov/collections/prokudin-gorskii/?st=grid"  target="_blank" rel="noopener">Prokudin-Gorskii collection</a></h2>
         <p><strong>Context:</strong> Some images I like ♥</p>
         <div class="gallery" data-group="sD">
@@ -433,7 +447,7 @@
 
 
       <!-- Appendix -->
-      <article class="card">
+      <article class="card" id="appendix">
         <h2>Appendix</a></h2>
         <p>
           <strong>Context:</strong> 
@@ -450,7 +464,7 @@
 
 
       <!-- Resources -->
-      <article class="card">
+      <article class="card" id="resources">
         <h2>Resources</h2>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj1/index.html" target="_blank" rel="noopener">Project Description</a></li>

@@ -1,6 +1,64 @@
 /* Project 2 overrides & helpers; inherits the global theme from ../styles.css */
 @import url("../styles.css");
 
+/* Static Outline Navigation */
+.outline-nav {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 1000;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.outline-nav h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.outline-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-nav li {
+  margin-bottom: 8px;
+}
+
+.outline-nav a {
+  display: block;
+  padding: 6px 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.outline-nav a:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.outline-nav a:active {
+  background: var(--accent);
+  color: white;
+}
+
+/* Remove margin adjustment - outline should not affect layout */
+
 /* Callouts for equations / notes */
 .callout{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:12px;margin:12px 0;color:var(--muted)}
 

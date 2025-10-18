@@ -24,6 +24,25 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- Static Outline Navigation -->
+    <nav class="outline-nav" id="outlineNav">
+      <h3>Outline</h3>
+      <ul>
+        <li><a href="#overview">Project Overview</a></li>
+        <li><a href="#part-a">Part A — Manual Stitching</a></li>
+        <li><a href="#a1">A.1 — Shoot and Digitize</a></li>
+        <li><a href="#a2">A.2 — Recover Homographies</a></li>
+        <li><a href="#a3">A.3 — Warp the Images</a></li>
+        <li><a href="#a4">A.4 — Blend Images</a></li>
+        <li><a href="#part-b">Part B — Automatic Stitching</a></li>
+        <li><a href="#b1">B.1 — Harris Corner Detection</a></li>
+        <li><a href="#b2">B.2 — Feature Descriptors</a></li>
+        <li><a href="#b3">B.3 — Feature Matching</a></li>
+        <li><a href="#b4">B.4 — RANSAC</a></li>
+        <li><a href="#resources">Resources</a></li>
+      </ul>
+    </nav>
+
     <nav class="crumbs">
       <a href="../index.html">← Back to Home</a>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
@@ -46,7 +65,7 @@
     <main class="grid">
 
       <!-- Summary -->
-      <section class="summary">
+      <section class="summary" id="overview">
         <h2>Project Overview</h2>
         <p>
           This project explores image mosaicing by implementing homography recovery, projective warping, and image blending from scratch. 
@@ -63,7 +82,7 @@
       </section>
 
       <!-- Part A header -->
-      <article class="card assignment-part">
+      <article class="card assignment-part" id="part-a">
         <h2>Part A — Manual Stitching</h2>
         <p>
           This section documents manual correspondence selection and homography-based mosaicing.
@@ -71,7 +90,7 @@
       </article>
 
       <!-- Part A.1: Shoot and digitize pictures -->
-      <article class="card">
+      <article class="card" id="a1">
         <h2>A.1 — Shoot and Digitize Pictures</h2>
         
         <h3>Image Acquisition</h3>
@@ -105,7 +124,7 @@
       </article>
 
       <!-- Part A.2: Recover homographies -->
-      <article class="card">
+      <article class="card" id="a2">
         <h2>A.2 — Recover Homographies</h2>
         
         <h3>Point Correspondence Selection</h3>
@@ -267,7 +286,7 @@
       </article>
 
       <!-- Part A.3: Warp the images -->
-      <article class="card">
+      <article class="card" id="a3">
         <h2>A.3 — Warp the Images</h2>
         
         <h3>Warping Implementation</h3>
@@ -332,7 +351,7 @@ def warpImageBilinear(im, H, output_size=None):
       </article>
 
       <!-- Part A.4: Blend images into a mosaic -->
-      <article class="card">
+      <article class="card" id="a4">
         <h2>A.4 — Blend Images into a Mosaic</h2>
         
         <h3>Mosaic Creation Process</h3>
@@ -687,7 +706,7 @@ def warpImageBilinear(im, H, output_size=None):
       </article> -->
 
       <!-- Resources -->
-      <article class="card">
+      <article class="card" id="resources">
         <h2>Resources</h2>
         <ul>
           <li><a href="https://cal-cs180.github.io/fa25/hw/proj3/" target="_blank" rel="noopener">Project Description</a></li>

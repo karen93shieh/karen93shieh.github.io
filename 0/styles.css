@@ -15,7 +15,65 @@ body{
   background:linear-gradient(180deg,var(--bg),var(--card));
   color:var(--ink);
 }
-.wrap{max-width:980px;margin:48px auto;padding:0 20px}
+.wrap{max-width:980px;margin:48px auto;padding:0 20px;position:relative}
+
+/* Static Outline Navigation */
+.outline-nav {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 1000;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.outline-nav h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.outline-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-nav li {
+  margin-bottom: 8px;
+}
+
+.outline-nav a {
+  display: block;
+  padding: 6px 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.outline-nav a:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.outline-nav a:active {
+  background: var(--accent);
+  color: white;
+}
+
+/* Remove margin adjustment - outline should not affect layout */
 
 /* crumbs + toggle */
 .crumbs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}

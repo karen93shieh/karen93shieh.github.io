@@ -224,6 +224,9 @@ ret, K, dist, rvecs, tvecs = cv2.calibrateCamera(
           In total, I captured 59 images. Because I’m reusing the same calibrated camera model for all of them,
           the poses I recover later will be consistent in the same world coordinate frame.
         </p>
+        <p>
+          p.s. Their names are Pwinky and Booey :)
+        </p>
 
         <div class="gallery" data-group="p0-plush">
           <figure>
@@ -967,20 +970,14 @@ class NeRFMLP(nn.Module):
 
         <h4>Staff Dataset (lafufu)</h4>
         <p>
-          I also tried the staff-provided lafufu dataset. Again, I just swapped the dataset file and adjusted the bounds,
-          and the same NeRF code could render smooth novel views of the plush.
+          I also tried the staff-provided lafufu dataset as a proof of concept (as I ran out of Colab Credits, I wasn't able to run it fully). Again, I just swapped the dataset file and adjusted the bounds,
+          and the same NeRF code could render smooth novel views of Lafufu.
         </p>
 
-        <div class="gallery two-images" data-group="lafufu">
-          <figure>
-            <img src="./media/lafufu_raw.gif" alt="Lafufu raw rendering" />
-            <figcaption>Lafufu raw rendering</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/lafufu.gif" alt="Lafufu processed rendering" />
-            <figcaption>Lafufu processed rendering</figcaption>
-          </figure>
-        </div>
+        <figure class="media">
+          <img src="./media/lafufu_raw.gif" alt="Lafufu novel-view GIF" />
+          <figcaption>Lafufu novel-view render.</figcaption>
+        </figure>
       </article>
 
       <!-- Resources -->

@@ -481,15 +481,18 @@
           I implemented three core functions to handle camera geometry and ray generation:
         </p>
         <ul>
-          <li><strong><code>transform(c2w, x_c)</code>:</strong> Transforms points from camera space to world space using
-            the camera-to-world matrix. Handles both single and batched transformations by converting to homogeneous
-            coordinates and applying the 4×4 transformation matrix.</li>
-          <li><strong><code>pixel_to_camera(K, uv, s)</code>:</strong> Inverts the pinhole projection to recover 3D
-            camera-space points from 2D pixel coordinates. Given the intrinsic matrix K and depth s, computes:
+          <li><strong><code>transform(c2w, x_c)</code>:</strong> Transforms 3D points from camera space to world space 
+            using homogeneous coordinates and matrix multiplication. Supports both single camera-to-world matrices [4, 4] 
+            and batched matrices [N, 4, 4] by checking <code>c2w.dim()</code>. Converts inputs to PyTorch tensors if needed 
+            and handles device placement for GPU acceleration.</li>
+          <li><strong><code>pixel_to_camera(K, uv, s)</code>:</strong> Inverts the pinhole camera projection to convert 
+            2D pixel coordinates back to 3D camera coordinates at depth s. Handles both single K matrix [3, 3] and batched 
+            K matrices [N, 3, 3]. Extracts focal lengths and principal point from K, then computes: 
             <code>x_c = s * (u - o_x) / f_x</code>, <code>y_c = s * (v - o_y) / f_y</code>, <code>z_c = s</code>.</li>
-          <li><strong><code>pixel_to_ray(K, c2w, uv)</code>:</strong> Combines the above to generate rays. For each pixel,
-            computes the ray origin (camera position from <code>c2w[:3, 3]</code>) and normalized ray direction by
-            transforming a camera-space point at depth s=1 to world space and normalizing the vector from origin to that point.</li>
+          <li><strong><code>pixel_to_ray(K, c2w, uv)</code>:</strong> Combines the above functions to generate rays from 
+            pixel coordinates. Extracts ray origin as camera position <code>c2w[:3, 3]</code>, converts pixels to camera 
+            space at depth s=1, transforms to world space, computes direction vector from origin to world point, and 
+            normalizes. Supports batched operations for efficient processing of multiple rays.</li>
         </ul>
         <!-- <p>
           I verified the implementation by visualizing cameras, rays, and sampled points in Viser. This confirmed that rays
@@ -506,33 +509,39 @@
 
         <h3>Part 2.2 — Sampling</h3>
         <p>
-          I implemented <code>sample_points_along_rays(ray_o, ray_d, near, far, n_samples, perturb)</code> to sample 3D
-          points along each ray. The function:
+          I implemented two key functions for ray sampling:
         </p>
         <ul>
-          <li>Creates uniform depth values: <code>t = linspace(near, far, n_samples)</code></li>
-          <li>Optionally adds stratified perturbation during training to prevent overfitting to discrete sample locations</li>
-          <li>Computes 3D points: <code>x = ray_o + ray_d * t</code> for each depth value</li>
-          <li>Returns both the 3D points and their depth values (z_vals) for later use in volume rendering</li>
+          <li><strong><code>get_rays_from_images(images, c2ws, K, N, method)</code>:</strong> Dynamically samples N rays 
+            from training images at each iteration. Uses global sampling (flattens all pixels from all images and randomly 
+            samples N rays). Adds 0.5 offset to pixel coordinates for pixel centers, expands K matrix to batch size, and 
+            calls <code>pixel_to_ray</code> to generate ray origins, directions, and corresponding RGB target colors.</li>
+          <li><strong><code>sample_points_along_rays(ray_o, ray_d, near, far, n_samples, perturb)</code>:</strong> 
+            Discretizes rays into 3D sample points by creating uniform depth values with <code>torch.linspace(near, far, n_samples)</code>. 
+            Optionally adds random perturbation during training for stratified sampling. Computes 3D points as 
+            <code>points = ray_o + ray_d * t</code> and returns both points [N, n_samples, 3] and depth values t_vals [N, n_samples].</li>
         </ul>
         <p>
           For the Lego scene, I used <code>near = 2.0</code>, <code>far = 6.0</code>, and <code>n_samples = 64</code> points
-          per ray. The stratified sampling with perturbation helps the network learn a continuous representation rather than
-          memorizing specific sample locations.
+          per ray. The training loop samples 10,000 rays per iteration using <code>get_rays_from_images</code> with 
+          <code>perturb=True</code> for stratified sampling, which helps the network learn a continuous representation.
         </p>
 
         <h3>Part 2.3 — Putting the Dataloading All Together</h3>
         <p>
-          I created a <code>RaysData</code> class that precomputes and stores all rays from the training images:
+          For efficient training, I use the <code>get_rays_from_images</code> function to dynamically sample rays at each 
+          training iteration:
         </p>
         <ul>
-          <li><strong>Initialization:</strong> For each training image, generates a grid of pixel coordinates, computes rays
-            using <code>pixel_to_ray</code>, and stores ray origins, directions, and target RGB colors. This precomputation
-            speeds up training significantly.</li>
-          <li><strong>Sampling:</strong> The <code>sample_rays(N)</code> method randomly samples N rays from the precomputed
-            set, returning ray origins [N, 3], directions [N, 3], and target colors [N, 3].</li>
-          <li><strong>Total rays:</strong> With 100 training images of 200×200 pixels, the dataset contains 4,000,000 rays.
-            Each training iteration samples 10,000 random rays for efficient batch processing.</li>
+          <li><strong>Dynamic Sampling:</strong> At each iteration, <code>get_rays_from_images</code> is called with the 
+            training images, camera poses, intrinsic matrix K, and batch size N=10,000. This generates a fresh batch of 
+            randomly sampled rays from across all training images.</li>
+          <li><strong>Intrinsic Matrix:</strong> Built from focal length and image dimensions as 
+            <code>K = [[focal, 0, W/2], [0, focal, H/2], [0, 0, 1]]</code>. For the Lego dataset with 200×200 images, 
+            this gives principal point at (100, 100).</li>
+          <li><strong>Total rays:</strong> With 100 training images of 200×200 pixels, there are 4,000,000 total rays 
+            available. Each training iteration samples 10,000 random rays (0.25% of total) for efficient stochastic 
+            gradient descent.</li>
         </ul>
 
         <h4>Visualization: Cameras, Rays, and Sampled Points</h4>
@@ -562,17 +571,23 @@
 
         <h4>Architecture Details</h4>
         <ul>
-          <li><strong>Positional Encoding:</strong>
+          <li><strong>Positional Encoding (<code>PositionalEncoding</code> class):</strong> Applies sinusoidal encoding 
+            with L frequency levels. For each frequency i from 0 to L-1, computes <code>sin(2^i * π * x)</code> and 
+            <code>cos(2^i * π * x)</code>, concatenating all results with the original input.
             <ul>
               <li>3D positions: L=10 frequencies → 63-dimensional encoding (3 × (1 + 2×10))</li>
               <li>View directions: L=4 frequencies → 27-dimensional encoding (3 × (1 + 2×4))</li>
-              <li>Formula: PE(x) = [x, sin(2⁰πx), cos(2⁰πx), ..., sin(2^(L-1)πx), cos(2^(L-1)πx)]</li>
             </ul>
           </li>
-          <li><strong>Main Branch:</strong> 8 fully-connected layers of 256 neurons with ReLU activation</li>
-          <li><strong>Skip Connection:</strong> After the 4th layer, concatenate the original positional encoding of x</li>
-          <li><strong>Density Output:</strong> Linear(256 → 1) → ReLU (ensures positive density values)</li>
-          <li><strong>RGB Output:</strong> Linear(256 → 256) → Concatenate with PE(direction) → Linear(256+27 → 128) → ReLU → Linear(128 → 3) → Sigmoid (ensures [0,1] range)</li>
+          <li><strong>Main Branch:</strong> 8 fully-connected layers (layer1-layer8) of 256 neurons each with ReLU activation. 
+            First 4 layers process encoded position, then skip connection concatenates original encoded position, followed by 
+            4 more layers.</li>
+          <li><strong>Skip Connection:</strong> After layer4, concatenates the original positional encoding with the intermediate 
+            features before feeding to layer5. This helps gradient flow and preserves input information.</li>
+          <li><strong>Density Output:</strong> Single linear layer (256 → 1) followed by ReLU to ensure non-negative density values.</li>
+          <li><strong>RGB Output Branch:</strong> Takes layer8 output, passes through rgb_layer1 (256 → 256), concatenates with 
+            encoded viewing direction, then rgb_layer2 (256+27 → 128) with ReLU, and finally rgb_layer3 (128 → 3) with Sigmoid 
+            to constrain RGB values to [0, 1] range.</li>
         </ul>
 
         <div class="metric-grid">
@@ -600,14 +615,26 @@
 
         <h3>Part 2.5 — Volume Rendering</h3>
         <p>
-          I implemented volume rendering in PyTorch using the standard NeRF formulation. For each ray, the final pixel color is
-          computed as:
+          I implemented the <code>volrend(sigmas, rgbs, step_size)</code> function to perform volume rendering using the 
+          standard NeRF formulation. For each ray, the final pixel color is computed as:
         </p>
         <p>
           <em>Ĉ(r) = Σᵢ Tᵢ (1 − exp(−σᵢ δᵢ)) cᵢ</em>, where <em>Tᵢ</em> is the accumulated transmittance before sample <em>i</em>.
         </p>
         <p>
-          I verified my implementation against the provided reference test, ensuring that the compositing behavior matched.
+          The implementation computes optical depth as <code>optical_depth = sigmas * step_size</code>, then alphas as 
+          <code>1 - exp(-optical_depth)</code>. Transmittance is computed efficiently using <code>torch.cumsum</code> to 
+          accumulate optical depth, then <code>exp(-cumulative_optical_depth)</code>. Finally, weights are computed as 
+          <code>transmittance * alphas</code> and the rendered color is the weighted sum of RGB values along the ray.
+        </p>
+
+        <h4>Training Configuration</h4>
+        <p>
+          The training loop uses Adam optimizer with learning rate 5e-4, batch size of 10,000 rays, and 64 samples per ray. 
+          At each iteration, rays are dynamically sampled using <code>get_rays_from_images</code>, points are sampled along 
+          rays with <code>perturb=True</code>, the NeRF model predicts density and RGB at each point, volume rendering 
+          produces predicted colors, and MSE loss is computed against target colors. Validation PSNR is computed every 100 
+          iterations by rendering full validation images using a helper function <code>render_image</code>.
         </p>
 
         <h4>Lego Training Progression &amp; PSNR</h4>
@@ -628,8 +655,11 @@
 
         <h4>Spherical Rendering</h4>
         <p>
-          Using the provided <code>c2ws_test</code> cameras, I rendered a spherical novel-view video of the Lego scene.
-          The camera orbits the scene at 360°, revealing consistent 3D structure.
+          Using the provided <code>c2ws_test</code> cameras from the dataset, I rendered a spherical novel-view video of the 
+          Lego scene. For each test camera pose, I generate a full grid of pixel coordinates, compute rays using 
+          <code>pixel_to_ray</code>, and render the image with <code>render_image</code> (which calls the NeRF model and 
+          volume rendering with <code>perturb=False</code> for deterministic results). The frames are saved as an MP4 video 
+          at 30 FPS, showing the camera orbiting the scene at 360° and revealing consistent 3D structure.
         </p>
         <figure class="media">
           <video controls loop autoplay muted style="width: 100%; border-radius: 12px; border: 1px solid var(--line);">
@@ -644,15 +674,18 @@
       <article class="card">
         <h2>Part 2.6 — Training with Your Own Data</h2>
         <p>
-          For the final part, I reused the NeRF pipeline on my own dataset collected in Part 0. This means replacing the Lego
-          cameras and images with my <code>my_object.npz</code> dataset while keeping the same ray generation, sampling, NeRF, and
-          volume rendering code.
+          For the final part, I reused the NeRF pipeline on my own dataset collected in Part 0. I loaded 
+          <code>nerf_dataset_compressed.npz</code> which contains training images, camera poses, and focal length from my 
+          plush object capture. The same ray generation, sampling, NeRF architecture, and volume rendering code is used, 
+          with only dataset-specific hyperparameters adjusted.
         </p>
 
-        <h3>Dataset-Specific Settings</h3>
+        <h3>Implementation Details</h3>
         <p>
-          Since my object is much closer to the camera than the Lego scene, I adjusted the near and far bounds, as well as a few
-          training hyperparameters:
+          I built the intrinsic matrix K from the stored focal length (263.43 pixels) and image dimensions (400×225), giving 
+          principal point at (112.5, 200.0). Since the plush is much closer to the camera than the Lego scene, I adjusted 
+          the near and far bounds significantly. The same <code>NeRFMLP</code> architecture (L_x=10, L_d=4, hidden_dim=256) 
+          is used, with 595,844 parameters.
         </p>
         <div class="metric-grid">
           <div class="metric">
@@ -661,7 +694,7 @@
           </div>
           <div class="metric">
             <strong>Samples / ray</strong>
-            32 → 64 (final)
+            64
           </div>
           <div class="metric">
             <strong>Batch size</strong>
@@ -671,36 +704,71 @@
             <strong>Optimizer</strong>
             Adam, lr = 5e-4
           </div>
+          <div class="metric">
+            <strong>Iterations</strong>
+            500 (trained)
+          </div>
+          <div class="metric">
+            <strong>Image size</strong>
+            400×225 pixels
+          </div>
         </div>
+
+        <h3>Training Process</h3>
+        <p>
+          The training loop follows the same structure as the Lego training: at each iteration, 10,000 rays are dynamically 
+          sampled using <code>get_rays_from_images</code>, points are sampled along rays with stratified perturbation, the 
+          NeRF model predicts density and RGB, volume rendering produces predicted colors, and MSE loss is backpropagated. 
+          The training loss over iterations shows a smooth downward trend, indicating successful convergence. Intermediate 
+          renders are saved at checkpoints to visualize the learning progression.
+        </p>
 
         <h4>Training Progression &amp; Loss</h4>
         <p>
           The predicted images from a validation view show geometry and appearance gradually sharpening across different iterations.
-          The training loss over iterations shows a smooth downward trend, indicating successful convergence.
+          The training loss curve demonstrates steady improvement as the model learns the 3D structure and appearance of the plush object.
         </p>
         <div class="gallery two-images" data-group="p2-own-train">
           <figure>
-            <img src="./media/object_progress_grid.png" alt="Training progression for my object NeRF" />
+            <img src="./media/iteration_plush.png" alt="Training progression for plush NeRF" />
             <figcaption>Training progression</figcaption>
           </figure>
           <figure>
-            <img src="./media/object_loss_curve.png" alt="Training loss curve for my object NeRF" />
+            <img src="./media/loss_plush.png" alt="Training loss curve for plush NeRF" />
             <figcaption>Training loss curve</figcaption>
           </figure>
         </div>
 
         <h4>Novel View Rendering</h4>
         <p>
-          Using generated <code>c2ws_test</code> poses, I rendered a novel-view GIF with the camera circling my object.
+          After training, I generated novel camera poses using helper functions (<code>look_at_origin</code>, rotation matrices) 
+          to create a circular camera trajectory around the plush. For each generated test pose, I render a full image using 
+          the same <code>render_image</code> function, then compile the frames into a GIF showing the camera circling the plush 
+          from novel viewpoints.
         </p>
         <figure class="media">
-          <img src="./media/object_novel_views.gif" alt="Novel view GIF circling my object" />
+          <img src="./media/plush.gif" alt="Novel view GIF circling the plush" />
           <figcaption>Novel-view GIF</figcaption>
         </figure>
+
+        <h4>Staff Dataset Rendering</h4>
+        <p>
+          I also trained the NeRF on the staff-provided lafufu dataset to demonstrate the pipeline's generalizability.
+        </p>
+        <div class="gallery two-images" data-group="lafufu">
+          <figure>
+            <img src="./media/lafufu_raw.gif" alt="Lafufu raw rendering" />
+            <figcaption>Raw rendering</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/lafufu.gif" alt="Lafufu processed rendering" />
+            <figcaption>Processed rendering</figcaption>
+          </figure>
+        </div>
       </article>
 
       <!-- Bells & Whistles (optional) -->
-      <article class="card">
+      <!-- <article class="card">
         <h2>Bells &amp; Whistles</h2>
         <p>
           For extra exploration, I experimented with additional outputs and improvements:
@@ -720,7 +788,7 @@
             <figcaption>Depth map example</figcaption>
           </figure>
         </div>
-      </article>
+      </article> -->
 
       <!-- Resources -->
       <article class="card">

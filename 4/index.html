@@ -621,6 +621,11 @@ def pixel_to_ray(K, c2w, uv):
         <p>
           To feed the NeRF, each ray needs to be discretized into a bunch of 3D sample points between a near and far plane.
         </p>
+        <p>
+            For each randomly sampled ray, I uniformly sample a fixed number of depth values between the near and far planes, 
+            then (during training) add a small random perturbation within each interval. 
+            These depths are multiplied with the ray direction and added to the ray origin to get the actual 3D sample points fed into the NeRF.
+        </p>
 
         <!-- <pre><code>def sample_points_along_rays(ray_o, ray_d, near, far, n_samples, perturb=True):
     """
@@ -976,7 +981,7 @@ class NeRFMLP(nn.Module):
 
         <figure class="media">
           <img src="./media/lafufu_raw.gif" alt="Lafufu novel-view GIF" />
-          <figcaption>Lafufu novel-view render.</figcaption>
+          <figcaption>Lafufu novel-view render</figcaption>
         </figure>
       </article>
 

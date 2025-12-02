@@ -23,6 +23,12 @@ Research Experience
 - **Undergraduate Student Researcher, REDS Lab, UC Berkeley**  
   Developed an LLM-driven pipeline that automatically scrapes and curates seed files from the web (e.g., mining GitHub repositories), designed as an off-the-shelf tool to lower the entry barrier to fuzzing. Built Docker-based fuzzing infrastructure for reproducible experiments across environments, and demonstrated that the generated corpora perform on par with expert-created corpora on the Magma benchmark, measuring vulnerability reach/trigger times and code coverage.
 
+- **Undergraduate Student Researcher, AUTOLab, UC Berkeley**  
+  Contributed to the Surgical D-Knot system by developing the 2D perception pipeline for suture manipulation. Implemented suture-line segmentation, extracted a smooth centerline through skeletonization and tracing, and computed robust grasping points along the thread to enable accurate 3D localization and reliable grasping for autonomous knot-tying. Integrated into the full system, this pipeline achieved up to 80.83% first-knot completion success on phantom tissue and enabled autonomous double-knot tying.
+
+- **Undergraduate Student Researcher, BOBALAB, UC Berkeley**  
+  Developed a JavaScript-based game to study tipping behavior in grocery stores, analyzing how decision-making changes under varying choice sets. Collected and analyzed behavioral data to understand decision-making patterns in complex environments, and integrated the game into a Qualtrics survey to preserve user privacy and data security.
+
 Industry Experience
 ======
 - **Software Engineering Intern, ClickTime, San Francisco, CA**  
@@ -43,6 +49,9 @@ Projects
 
 - **NASA Spacesuit User Interface Technologies for Students Challenge**  
   Collaborated with USC to design and develop spacesuit information displays and a navigation system for astronauts using HoloLens 2 during EVA and UIA. Integrated AI, text-to-speech (TTS), and computer vision (CV) technologies into Unity and led UI/UX design to ensure a seamless user experience in extreme environments, with real-time feedback and intuitive controls.
+
+- **For Traum**  
+  Partnered with USC students to develop a 2.5D silhouette-style platformer shooter in Unity using C#. Implemented visual novel mechanics and character animations to enrich the storyline with interactive elements, refine gameplay flow, and ensure smooth integration of narrative and action sequences.
 
 Technical Skills
 ======

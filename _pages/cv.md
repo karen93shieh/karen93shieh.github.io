@@ -9,56 +9,46 @@ redirect_from:
 
 {% include base_path %}
 
+**Download full CV (PDF):** [Karen_Shieh_Resume.pdf](/files/Karen_Shieh_Resume.pdf)
+
 Education
 ======
-* Ph.D in Version Control Theory, GitHub University, 2018 (expected)
-* M.S. in Jekyll, GitHub University, 2014
-* B.S. in GitHub, GitHub University, 2012
+- **University of California, Berkeley**  
+  B.A. in Computer Science, B.A. in Data Science · Regents’ and Chancellor’s Scholar · 4.00 GPA  
+  **Related coursework:** Structure and Interpretation of Computer Programs; Data Structures; Discrete Mathematics and Probability Theory; Principles & Techniques of Data Science; Efficient Algorithms and Intractable Problems; Machine Structures; Introduction to Machine Learning; Optimization Models in Engineering; Computer Security; Designing/Visualizing/Understanding Deep Neural Networks; Operating Systems and System Programming; Natural Language Processing; Intro to Computer Vision and Computational Photography  
+  **Awards and Honors:** Regents’ and Chancellor’s Scholar; EECS Honors
 
-Work experience
+Research Experience
 ======
-* Spring 2024: Academic Pages Collaborator
-  * GitHub University
-  * Duties includes: Updates and improvements to template
-  * Supervisor: The Users
+- **Undergraduate Student Researcher, REDS Lab, UC Berkeley**  
+  Developed an LLM-driven pipeline that automatically scrapes and curates seed files from the web (e.g., mining GitHub repositories), designed as an off-the-shelf tool to lower the entry barrier to fuzzing. Built Docker-based fuzzing infrastructure for reproducible experiments across environments, and demonstrated that the generated corpora perform on par with expert-created corpora on the Magma benchmark, measuring vulnerability reach/trigger times and code coverage.
 
-* Fall 2015: Research Assistant
-  * GitHub University
-  * Duties included: Merging pull requests
-  * Supervisor: Professor Hub
+Industry Experience
+======
+- **Software Engineering Intern, ClickTime, San Francisco, CA**  
+  Developed C#/.NET backend APIs, created SQL tables with triggers, and built React frontend components for Time Entry Activity, a heatmap dashboard to visualize employee time-entry behavior. Designed a reusable and scalable full-stack architecture to ensure maintainability and support future extensions, built user-centric features that streamlined workflows and integrated with existing systems, and leveraged GitHub Copilot to accelerate development and reach stretch goals beyond the original project scope.
 
-* Summer 2015: Research Assistant
-  * GitHub University
-  * Duties included: Tagging issues
-  * Supervisor: Professor Git
-  
-Skills
-======
-* Skill 1
-* Skill 2
-  * Sub-skill 2.1
-  * Sub-skill 2.2
-  * Sub-skill 2.3
-* Skill 3
+- **Web Development Assistant, Safe Transportation Research and Education Center, Berkeley, CA**  
+  Built a dynamic SvelteKit website for California cities to collect and manage bicycle, pedestrian, and wheelchair traffic data for infrastructure projects. Designed and maintained database schemas and relationships using Prisma and SQL.
 
-Publications
-======
-  <ul>{% for post in site.publications reversed %}
-    {% include archive-single-cv.html %}
-  {% endfor %}</ul>
-  
-Talks
-======
-  <ul>{% for post in site.talks reversed %}
-    {% include archive-single-talk-cv.html  %}
-  {% endfor %}</ul>
-  
 Teaching
 ======
-  <ul>{% for post in site.teaching reversed %}
-    {% include archive-single-cv.html %}
-  {% endfor %}</ul>
-  
-Service and leadership
+- **Academic Tutor, Data 140 (Probability for Data Science), UC Berkeley**  
+  Guide students through core probability concepts during labs and office hours, clarify problem-solving strategies, and provide detailed feedback on assignments, highlighting common errors and suggesting resources to improve understanding.
+
+Projects
 ======
-* Currently signed in to 43 different slack teams
+- **Estuary**  
+  Front-end developer on an open-source multimodal framework for building low-latency, real-time socially interactive agents, integrating conversational behavior and multi-modal interaction (GitHub / arXiv).
+
+- **NASA Spacesuit User Interface Technologies for Students Challenge**  
+  Collaborated with USC to design and develop spacesuit information displays and a navigation system for astronauts using HoloLens 2 during EVA and UIA. Integrated AI, text-to-speech (TTS), and computer vision (CV) technologies into Unity and led UI/UX design to ensure a seamless user experience in extreme environments, with real-time feedback and intuitive controls.
+
+Technical Skills
+======
+- **Languages:** Java, Python, C/C#, SQL, Scheme, JavaScript, TypeScript, HTML/CSS  
+- **Frameworks & Platforms:** React, SvelteKit, Unity, Jupyter Notebook, HoloLens 2, Prisma, .NET  
+- **Developer Tools:** Git, Docker, VS Code/Copilot, Visual Studio, PyCharm, Cursor, Google Colab, SSMS, Postman  
+- **Libraries:** pandas, NumPy, Matplotlib, seaborn, PyTorch  
+- **Certifications:** Cloud Computer Basics; Introduction to Programming with MATLAB; New Models of Business in Society; CAD Mechanical Design I; Computer Essential Skills & Programming
+

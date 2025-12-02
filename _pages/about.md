@@ -1,6 +1,6 @@
 ---
 permalink: /
-title: "About Me"
+title: "Karen Shieh"
 author_profile: true
 redirect_from: 
   - /about/
@@ -9,7 +9,60 @@ redirect_from:
 
 About Me
 ------
-Hi, I'm Karen Shieh. I use this site to highlight current research interests, recent publications, and the courses I love teaching. Outside the lab you'll find me mentoring students, building data-driven tools, and exploring ways to explain complex systems with clear stories.
+I am a Berkeley CS/DS undergraduate with a research focus on computer security. I am motivated by the gap between rapidly evolving software systems and the limited tools we have for reasoning about their security, and I want my work to make it easier for engineers to ship fast without shipping vulnerabilities. Right now I am especially interested in techniques that detect security flaws introduced by code changes, so that regressions and risky patches can be caught automatically during development.
+
+Research
+------
+My research centers on security, automation, and machine learning for software security and systems.
+
+- **LLM-driven fuzzing (SeedAiChemy)**: I worked on using large language models to generate higher-quality seed corpora for fuzzers, improving coverage and bug-finding effectiveness compared to traditional seed selection. This includes designing prompts that steer the model toward diverse, semantically meaningful inputs.
+- **Code-change vulnerability detection**: I am studying methods for flagging security-relevant changes in code diffs, with the goal of providing reviewers with targeted warnings about potentially dangerous edits before they are merged.
+- **Log rules and anomaly detection**: I am exploring rule-learning and ML-based approaches for automatically deriving invariants from system logs, then using them to surface suspicious or rare behaviors in production.
+- **Robotics for surgery**: I contributed to work on autonomous double-knot tying for surgical sutures, developing perception and control pipelines so a robot can tie secure, reliable knots with minimal human supervision (IROS 2025).
+- **Estuary: real-time socially interactive agents**: I helped built Estuary, a system for low-latency, socially aware agents that can converse, react, and coordinate across modalities in real time.
+- **Simulation of human behavior**: I worked on simulation models of grocery-store shopper behavior, using interaction data to study how layout, congestion, and incentives affect navigation and decision making.
+
+Publications
+------
+- **SeedAiChemy: LLM-driven seed corpus generation for fuzzing (LLM4SEC)** – [paper](https://people.eecs.berkeley.edu/~daw/papers/seedaichemy.pdf)
+- **Autonomous double-knot tying for surgical sutures (IROS 2025)** – [paper](https://autolab.berkeley.edu/assets/publications/media/IROS2025_Knot_Tying_final.pdf)
+- **Estuary: low-latency real-time socially interactive agents (CHI 2025)** – [arXiv](https://arxiv.org/abs/2504.14427)
+
+Experience
+------
+- **Software Engineering Intern, ClickTime** – Developed C#/.NET backend APIs, SQL tables with triggers, and React frontend components for a time-entry heatmap dashboard; designed a reusable full-stack architecture, integrated with existing systems, and used tools like GitHub Copilot to deliver features beyond the original project scope.
+- **Web Development Assistant, Safe Transportation Research and Education Center** – Built a dynamic SvelteKit site for California cities to collect and manage bicycle, pedestrian, and wheelchair traffic data for infrastructure projects, and designed database schemas and relationships using Prisma, SQL, and SSMS.
+- **Academic Tutor, Data 140 (Probability for Data Science)** – Guide students through core probability concepts during labs and office hours, clarify problem-solving strategies, and provide detailed feedback on assignments to improve understanding and performance.
+- **Regents & Chancellor’s Scholars Association – Corporate Relations Co-leader** – Organized partnerships and events connecting scholars with industry, managing outreach, logistics, and team coordination.
+- **Team Lead in CS 162 (Operating Systems) and INFO 159 (NLP)** – Led project teams on systems and NLP projects, coordinating architecture decisions, code quality, testing, and documentation.
+
+Skills
+------
+- **Systems & Security**: Docker, Linux systems, security engineering practices, log and telemetry analysis, data gathering and wrangling for security tasks.
+- **Software & Frameworks**: Experience across modern web stacks (SvelteKit, React, Prisma, .NET, SQL) and tooling for experiment-heavy research.
+- **Machine Learning & Security**: Background in ML, deep learning, and their applications to fuzzing, anomaly detection, and code-change analysis.
+- **Ways of working**: Fast learner, comfortable ramping up on new frameworks and libraries, and effective in fast-paced, collaborative research environments.
+
+Coursework
+------
+My coursework spans foundations, systems, machine learning, and security:
+
+- Algorithms  
+- Machine Structures  
+- Machine Learning  
+- Optimization Models  
+- Computer Security  
+- Deep Neural Networks  
+- Operating Systems  
+- Natural Language Processing  
+
+Academics
+------
+I maintain a 4.0 GPA at Berkeley and actively seek out advanced, conceptually challenging courses. I am particularly drawn to classes that combine theory with hands-on systems work, where I can apply ideas to real software and data.
+
+Research Philosophy
+------
+I am motivated by research that has concrete impact on the security and reliability of real systems. I am drawn toward problems where automation and ML can meaningfully augment human experts, whether by surfacing subtle vulnerabilities, prioritizing critical alerts, or generating better test inputs. Ultimately, I want my work to help make secure-by-default development practical at scale, and to bridge the gap between cutting-edge ML and trustworthy software engineering.
 
 <!--
 This is the front page of a website that is powered by the [Academic Pages template](https://github.com/academicpages/academicpages.github.io) and hosted on GitHub pages. [GitHub pages](https://pages.github.com) is a free service in which websites are built and hosted from code and data stored in a GitHub repository, automatically updating when a new commit is made to the repository. This template was forked from the [Minimal Mistakes Jekyll Theme](https://mmistakes.github.io/minimal-mistakes/) created by Michael Rose, and then extended to support the kinds of content that academics have: publications, talks, teaching, a portfolio, blog posts, and a dynamically-generated CV. Incidentally, these same features make it a great template for anyone that needs to show off a professional template!

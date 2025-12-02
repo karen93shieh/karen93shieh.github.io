@@ -1,32 +1,32 @@
 {
   "basics": {
     "name": "Karen Shieh",
-    "email": "none@example.org",
+    "email": "karen93@berkeley.edu",
     "phone": "",
     "website": "https://karen93shieh.github.io/",
-    "summary": "Currently employed at Red Brick University. Short biography for the left-hand sidebar",
+    "summary": "Undergraduate at UC Berkeley studying Computer Science and Data Science.",
     "location": {
       "address": "",
       "postalCode": "",
-      "city": "Earth",
+      "city": "Berkeley",
       "countryCode": "US",
-      "region": ""
+      "region": "CA"
     },
     "profiles": [
       {
-        "network": "Google Scholar",
+        "network": "arXiv",
         "username": "",
-        "url": "https://scholar.google.com/citations?user=PS_CX0AAAAAJ"
+        "url": "https://arxiv.org/search/cs?searchtype=author&query=Shieh,+K"
       },
       {
         "network": "ORCID",
         "username": "",
-        "url": "https://orcid.org/yourorcidurl"
+        "url": "https://dl.acm.org/profile/99661565663"
       },
       {
         "network": "GitHub",
-        "username": "academicpages",
-        "url": "https://github.com/academicpages"
+        "username": "karen93shieh",
+        "url": "https://github.com/karen93shieh"
       }
     ]
   },

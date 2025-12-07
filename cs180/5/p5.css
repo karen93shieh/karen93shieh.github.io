@@ -1,0 +1,257 @@
+/* Project 5 overrides & helpers; inherits the global theme from ../styles.css */
+@import url("../styles.css");
+
+/* Static Outline Navigation (same style as other projects) */
+.outline-nav {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  z-index: 1000;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.outline-nav h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.outline-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.outline-nav li {
+  margin-bottom: 8px;
+}
+
+.outline-nav a {
+  display: block;
+  padding: 6px 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.outline-nav a:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.outline-nav a:active {
+  background: var(--accent);
+  color: white;
+}
+
+.outline-nav a.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+/* Callouts for equations / notes */
+.callout {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  color: var(--muted);
+}
+
+/* Tiny code blocks */
+code, pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+pre {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  overflow: auto;
+}
+
+/* Figure captions slightly tighter for this page */
+.gallery figcaption {
+  font-size: 13px;
+}
+
+/* Force a single-column layout even on wide screens (if needed) */
+.flex2.stack {
+  grid-template-columns: 1fr !important;
+}
+@media (min-width:900px){
+  .flex2.stack { grid-template-columns: 1fr !important; }
+}
+
+/* Ensure gallery images are obviously clickable */
+.gallery img { cursor: pointer; }
+
+/* Center figure captions */
+.gallery figcaption,
+.media figcaption {
+  text-align: center;
+}
+
+/* Safety: make sure figures don't overflow their container */
+.media img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Wide single figure section */
+.widefig {
+  margin: 1rem 0;
+  text-align: center;
+}
+.widefig img {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: pointer;
+}
+.widefig figcaption {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* Lightbox image centering */
+.lb-img {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Stack gallery items vertically */
+.gallery.stack {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+/* Two images side by side */
+.two-images {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.two-images > div,
+.two-images figure {
+  flex: 1;
+  margin: 0;
+}
+.two-images img {
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.two-images figcaption {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* three-wide generic layout */
+.three-wide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* Mathematical equations styling */
+.math-equation {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+.math-equation p {
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+/* Placeholder content styling */
+.placeholder {
+  font-style: italic;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.placeholder-inline {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.placeholder-figure {
+  margin: 0;
+}
+.placeholder-box {
+  width: 100%;
+  padding-top: 60%;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 4px,
+    rgba(0, 0, 0, 0.04) 4px,
+    rgba(0, 0, 0, 0.04) 8px
+  );
+  display: block;
+}
+
+/* Assignment part counter styling */
+.assignment-part {
+  position: relative;
+  padding-left: 2rem;
+}
+.assignment-part::before {
+  content: counter(part-counter);
+  counter-increment: part-counter;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: var(--accent);
+  color: var(--bg);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+main {
+  counter-reset: part-counter;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .two-images {
+    flex-direction: column;
+  }
+  .three-wide {
+    grid-template-columns: 1fr;
+  }
+  .outline-nav {
+    display: none; /* hide static nav on narrow screens if needed */
+  }
+}

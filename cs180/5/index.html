@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project 5 · CS180</title>
+
+  <!-- Pre-paint theme (same key/logic as other pages) -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('theme');
+        const initial = (saved === 'light' || saved === 'dark')
+          ? saved
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', initial);
+      } catch { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
+
+  <!-- Reuse site-wide styles + P5 helpers -->
+  <link rel="stylesheet" href="../1/styles.css?v=1" />
+  <link rel="stylesheet" href="./p5.css?v=1" />
+</head>
+<body>
+  <div class="wrap">
+    <!-- Static Outline Navigation -->
+    <nav class="outline-nav" id="outlineNav">
+      <h3>Outline</h3>
+      <ul>
+        <li><a href="#overview">Project Overview</a></li>
+        <li><a href="#part-a">Part A — Diffusion Models</a></li>
+        <li><a href="#p0">Part 0 — Setup & Prompts</a></li>
+        <li><a href="#p1">Part 1 — Sampling Loops</a></li>
+        <li><a href="#p1-1">1.1 — Forward Process</a></li>
+        <li><a href="#p1-2">1.2 — Classical Denoising</a></li>
+        <li><a href="#p1-3">1.3 — One-Step Denoising</a></li>
+        <li><a href="#p1-4">1.4 — Iterative Denoising</a></li>
+        <li><a href="#p1-5">1.5 — Sampling</a></li>
+        <li><a href="#p1-6">1.6 — Classifier-Free Guidance</a></li>
+        <li><a href="#p1-7">1.7 — Image-to-Image</a></li>
+        <li><a href="#p1-7-1">1.7.1 — Hand-Drawn / Web</a></li>
+        <li><a href="#p1-7-2">1.7.2 — Inpainting</a></li>
+        <li><a href="#p1-7-3">1.7.3 — Text-Conditional</a></li>
+        <li><a href="#p1-8">1.8 — Visual Anagrams</a></li>
+        <li><a href="#p1-9">1.9 — Hybrid Images</a></li>
+        <!-- <li><a href="#bells">Part 2 — Bells & Whistles</a></li> -->
+        <li><a href="#resources">Resources</a></li>
+      </ul>
+    </nav>
+
+    <nav class="crumbs">
+      <a href="../index.html">← Back to Home</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle color theme" title="Toggle color theme">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+    </nav>
+
+    <header class="hero">
+      <h1>Project 5: The Power of Diffusion Models</h1>
+      <p class="subtitle">
+        Exploring DeepFloyd IF, forward/denoising processes, and fun applications like inpainting, visual anagrams, and hybrid images.
+      </p>
+      <ul class="meta">
+        <li><strong>Date:</strong> Nov 2025</li>
+        <li><strong>Course:</strong> CS180</li>
+      </ul>
+    </header>
+
+    <main class="grid">
+
+      <!-- Summary -->
+      <section class="summary" id="overview">
+        <h2>Project Overview</h2>
+        <p>
+          In Part A of Project 5, I experiment with a pre-trained text-to-image diffusion model (DeepFloyd IF) to understand
+          how diffusion-based generative models work in practice. I implement the forward diffusion process, several denoising
+          schemes, and then apply them to tasks like image-to-image translation, inpainting, visual anagrams, and hybrid images.
+        </p>
+        <p>
+          All core work for Part A is done in the provided Colab notebook, but this webpage summarizes my implementation,
+          visual results, and short reflections for each sub-part.
+        </p>
+        <p class="callout">
+          Tip: All deliverable slots have <span class="placeholder-inline">[TODO]</span> markers so I can quickly drop in figures and captions from my notebook.
+        </p>
+      </section>
+
+      <!-- Part A header -->
+      <article class="card assignment-part" id="part-a">
+        <h2>Part A — The Power of Diffusion Models</h2>
+        <p>
+          This section follows the project handout: setting up DeepFloyd IF, implementing sampling loops, and exploring 
+          several applications of diffusion models using the provided denoisers and schedulers.
+        </p>
+      </article>
+
+      <!-- Part 0: Setup -->
+      <article class="card" id="p0">
+        <h2>Part 0 — Setup & Prompt Embeddings</h2>
+
+        <h3>Gaining Access to DeepFloyd</h3>
+        <p>
+          I created a Hugging Face account, accepted the license for <code>DeepFloyd/IF-I-XL-v1.0</code>, and generated a read-only
+          access token. This token was then used in the Colab notebook to authenticate against Hugging Face and download
+          the DeepFloyd IF models.
+        </p>
+
+        <h3>Prompt Embeddings via Hosted Encoders</h3>
+        <p>
+          Since the T5 text encoder is quite large, the project provides hosted Hugging Face Spaces (clusters A and B)
+          that turn text prompts into 4096-dimensional prompt embeddings. I used these spaces to build a dictionary from
+          my own prompts to their embeddings, saved as a <code>.pth</code> file and loaded in Colab.
+        </p>
+
+        <h3>Playing With Custom Text Prompts</h3>
+        <p>
+          I experimented with several fun prompts, including contrasting pairs for later visual anagrams and hybrid images
+          (for example, prompts describing different objects, styles, or scenes that could be combined).
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>List of custom text prompts and how I grouped them for later tasks (anagrams / hybrids). <span class="placeholder-inline">[TODO]</span></li>
+          <li>3 chosen prompts with generated images for each. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Reflections on quality vs. text alignment for different <code>num_inference_steps</code> settings. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Reported random seed used consistently for all subsequent parts. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="p0-samples">
+          <!-- TODO: replace with actual img tags -->
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Example prompt &amp; DeepFloyd IF output #1. [TODO]</figcaption>
+          </figure>
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Example prompt &amp; output #2. [TODO]</figcaption>
+          </figure>
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Example prompt &amp; output #3. [TODO]</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- Part 1 header -->
+      <article class="card assignment-part" id="p1">
+        <h2>Part 1 — Sampling Loops & Diffusion Tasks</h2>
+        <p>
+          In Part 1, I implement the forward diffusion process, one-step and iterative denoising, and then use these
+          routines for generation, classifier-free guidance, image-to-image translation, inpainting, visual anagrams, and hybrid images.
+        </p>
+      </article>
+
+      <!-- 1.1 Forward process -->
+      <article class="card" id="p1-1">
+        <h2>1.1 — Implementing the Forward Process</h2>
+        <p>
+          The forward process adds noise to a clean image <code>x₀</code> according to the schedule <code>ᾱₜ</code>:
+        </p>
+        <div class="math-equation">
+          <p><code>xₜ = √ᾱₜ · x₀ + √(1 − ᾱₜ) · ε</code>, where <code>ε ~ N(0, I)</code>.</p>
+        </div>
+        <p>
+          Using the provided <code>alphas_cumprod</code>, I implemented <code>forward(im, t)</code> to generate noisy versions
+          of the Campanile at various timesteps, and visualized the increasing noise for <code>t ∈ {250, 500, 750}</code>.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of <code>forward(im, t)</code> completed in Colab notebook.</li>
+          <li>Campanile at timesteps 250, 500, 750 showing progressive noise increase.</li>
+        </ul>
+
+        <div class="gallery" data-group="p1-1-campanile">
+          <figure>
+            <img src="media/part_1/part_1.1/250.png" alt="Noisy Campanile at t=250">
+            <figcaption>Campanile, t = 250</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.1/500.png" alt="Noisy Campanile at t=500">
+            <figcaption>Campanile, t = 500</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.1/750.png" alt="Noisy Campanile at t=750">
+            <figcaption>Campanile, t = 750</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.2 Classical denoising -->
+      <article class="card" id="p1-2">
+        <h2>1.2 — Classical Denoising (Gaussian Blur)</h2>
+        <p>
+          I attempted to denoise the noisy Campanile images using classical Gaussian blur filtering via
+          <code>torchvision.transforms.functional.gaussian_blur</code>. The goal is to see how far a simple low-pass filter
+          can go on its own.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>For each noisy Campanile image (<code>t = 250, 500, 750</code>), show the best Gaussian-denoised result side-by-side.</li>
+          <li>Reflection: Gaussian blur struggles significantly compared to diffusion-based denoisers because it uniformly smooths the entire image, losing important high-frequency details and edges. It cannot distinguish between noise and actual image content, whereas diffusion models learn the natural image manifold and can intelligently restore structure.</li>
+        </ul>
+
+        <div class="gallery" data-group="p1-2-gaussian">
+          <figure>
+            <img src="media/part_1/part_1.2/250.png" alt="Gaussian-denoised Campanile at t=250">
+            <figcaption>Gaussian-denoised (t = 250)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.2/500.png" alt="Gaussian-denoised Campanile at t=500">
+            <figcaption>Gaussian-denoised (t = 500)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.2/750.png" alt="Gaussian-denoised Campanile at t=750">
+            <figcaption>Gaussian-denoised (t = 750)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.3 One-step denoising -->
+      <article class="card" id="p1-3">
+        <h2>1.3 — One-Step Denoising with DeepFloyd IF</h2>
+        <p>
+          Using <code>stage_1.unet</code> and the prompt embedding for <q>a high quality photo</q>, I performed a single
+          denoising step on noisy Campanile images. The UNet predicts the noise (first 3 channels of the output), which
+          I then used with the forward equation to estimate <code>x₀</code>.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>One-step denoised Campanile for <code>t = 250, 500, 750</code>.</li>
+          <li>Discussion: As the noise level increases, the one-step denoising quality degrades significantly. At t=250, the model can recover reasonable structure, but at t=750, a single denoising step struggles to recover fine details and the image appears much blurrier. This demonstrates why iterative denoising is necessary for high-quality results.</li>
+        </ul>
+
+        <div class="gallery" data-group="p1-3-onestep">
+          <figure>
+            <img src="media/part_1/part_1.3/250.png" alt="One-step denoised at t=250">
+            <figcaption>One-step denoised, t = 250</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.3/500.png" alt="One-step denoised at t=500">
+            <figcaption>One-step denoised, t = 500</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.3/750.png" alt="One-step denoised at t=750">
+            <figcaption>One-step denoised, t = 750</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.4 Iterative denoising -->
+      <article class="card" id="p1-4">
+        <h2>1.4 — Iterative Denoising with Strided Timesteps</h2>
+        <p>
+          I defined a strided timestep schedule starting from 990 down to 0 with a stride of 30, then used the provided
+          reverse-diffusion formula and <code>add_variance</code> to iteratively denoise a noisy Campanile image. Every 5th iteration
+          is visualized to show the gradual improvement.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Strided timestep schedule implemented with stride of 30 from 990 to 0.</li>
+          <li>Iterative denoising process showing gradual improvement every 5 iterations.</li>
+          <li>Final clean image demonstrates superior quality compared to one-step denoising and Gaussian blur methods.</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-4-iter">
+          <h4>Iterative Denoising Process (Every 5th Step)</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.4/0.png" alt="Iteration 0">
+              <figcaption>Step 0</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/1.png" alt="Iteration 5">
+              <figcaption>Step 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/2.png" alt="Iteration 10">
+              <figcaption>Step 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/3.png" alt="Iteration 15">
+              <figcaption>Step 15</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/4.png" alt="Iteration 20">
+              <figcaption>Step 20</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/5.png" alt="Iteration 25">
+              <figcaption>Step 25</figcaption>
+            </figure>
+          </div>
+
+          <h4>Comparison of Methods</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.4/final_clean.png" alt="Final iterative denoised">
+              <figcaption>Final Iterative Denoise (Clean)</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/one_step.png" alt="One-step denoising">
+              <figcaption>One-Step Denoising</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/blurred.png" alt="Gaussian blur">
+              <figcaption>Gaussian Blur</figcaption>
+            </figure>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1.5 Sampling -->
+      <article class="card" id="p1-5">
+        <h2>1.5 — Diffusion Model Sampling</h2>
+        <p>
+          I sampled random noise at the noisiest timestep and ran the iterative denoiser with the prompt <q>a high quality photo</q>
+          to generate novel images from scratch.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>5 sampled images for the prompt <q>a high quality photo</q>.</li>
+          <li>Comment on diversity vs. realism without CFG: The images show reasonable realism but lack the sharpness and detail that CFG provides. The diversity is good with various subjects appearing.</li>
+        </ul>
+
+        <div class="gallery" data-group="p1-5-samples">
+          <figure>
+            <img src="media/part_1/part_1.5/clear_1.png" alt="Sample 1 - High quality photo generation">
+            <figcaption>Sample 1</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.5/clear_2.png" alt="Sample 2 - High quality photo generation">
+            <figcaption>Sample 2</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.5/clear_3.png" alt="Sample 3 - High quality photo generation">
+            <figcaption>Sample 3</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.5/clear_4.png" alt="Sample 4 - High quality photo generation">
+            <figcaption>Sample 4</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.5/clear_5.png" alt="Sample 5 - High quality photo generation">
+            <figcaption>Sample 5</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.6 CFG -->
+      <article class="card" id="p1-6">
+        <h2>1.6 — Classifier-Free Guidance (CFG)</h2>
+        <p>
+          I extended the iterative denoiser to compute both unconditional and conditional noise estimates and combined them using
+        </p>
+        <div class="math-equation">
+          <p><code>ε = εᵤ + γ · (ε꜀ − εᵤ)</code>, with guidance scale <code>γ = 7</code>.</p>
+        </div>
+        <p>
+          For unconditional guidance, I used the empty prompt <code>""</code>. The conditional embedding corresponds to
+          <q>a high quality photo</q>.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of <code>iterative_denoise_cfg</code> completed in Colab notebook.</li>
+          <li>5 CFG-sampled images for <q>a high quality photo</q> with <code>γ = 7</code>.</li>
+          <li>Comparison: CFG samples show significantly improved sharpness, detail, and more coherent structure compared to non-CFG samples. The guidance helps the model produce images that better adhere to the prompt.</li>
+        </ul>
+
+        <div class="gallery" data-group="p1-6-cfg">
+          <figure>
+            <img src="media/part_1/part_1.6/clean_1.png" alt="Sample 1 with CFG">
+            <figcaption>Sample 1 with CFG</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.6/clean_2.png" alt="Sample 2 with CFG">
+            <figcaption>Sample 2 with CFG</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.6/clean_3.png" alt="Sample 3 with CFG">
+            <figcaption>Sample 3 with CFG</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.6/clean_4.png" alt="Sample 4 with CFG">
+            <figcaption>Sample 4 with CFG</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.6/clean_5.png" alt="Sample 5 with CFG">
+            <figcaption>Sample 5 with CFG</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.7 Image-to-image -->
+      <article class="card" id="p1-7">
+        <h2>1.7 — Image-to-Image Translation (SDEdit-style)</h2>
+        <p>
+          Starting from the original Campanile image, I added a small amount of noise and then denoised with CFG (using
+          <q>a high quality photo</q>) to project the image back to the natural image manifold. By varying the starting index
+          (<code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>), I obtained a continuum of edits from subtle to more drastic.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Campanile edits for <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>.</li>
+          <li>Same procedure applied to 2 personal test images (Sather Gate and Hearst Mining).</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-7-campanile">
+          <figure>
+            <img src="media/part_1/part_1.7/coriginal.png" alt="Original Campanile">
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7/c1.png" alt="Campanile i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/c3.png" alt="Campanile i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/c5.png" alt="Campanile i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/c7.png" alt="Campanile i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/c10.png" alt="Campanile i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/c20.png" alt="Campanile i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="gallery stack" data-group="p1-7-personal">
+          <h4>Sather Gate</h4>
+          <figure>
+            <img src="media/part_1/part_1.7/soriginal.png" alt="Original Sather Gate">
+            <figcaption>Original Sather Gate</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7/s1.png" alt="Sather Gate i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/s3.png" alt="Sather Gate i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/s5.png" alt="Sather Gate i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/s7.png" alt="Sather Gate i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/s10.png" alt="Sather Gate i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/s20.png" alt="Sather Gate i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+
+          <h4>Hearst Mining Building</h4>
+          <figure>
+            <img src="media/part_1/part_1.7/horiginal.png" alt="Original Hearst Mining">
+            <figcaption>Original Hearst Mining</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7/h1.png" alt="Hearst Mining i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/h3.png" alt="Hearst Mining i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/h5.png" alt="Hearst Mining i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/h7.png" alt="Hearst Mining i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/h10.png" alt="Hearst Mining i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7/h20.png" alt="Hearst Mining i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1.7.1 Hand-drawn / web -->
+      <article class="card" id="p1-7-1">
+        <h2>1.7.1 — Editing Hand-Drawn and Web Images</h2>
+        <p>
+          I downloaded a non-photorealistic image from the web and also created two hand-drawn sketches. Using the same
+          SDEdit-style pipeline with CFG, I projected them onto the natural image manifold at different noise levels.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>1 web image (sunset) with edits at noise levels {1, 3, 5, 7, 10, 20}.</li>
+          <li>2 hand-drawn images with edits at the same noise levels.</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-7-1-web">
+          <h4>Web Image: Sunset</h4>
+          <figure>
+            <img src="media/part_1/part_1.7.1/woriginal.png" alt="Original Web Image - Sunset">
+            <figcaption>Original Web Image</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.1/w1.png" alt="Web image i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/w3.png" alt="Web image i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/w5.png" alt="Web image i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/w7.png" alt="Web image i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/w10.png" alt="Web image i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/w20.png" alt="Web image i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="gallery stack" data-group="p1-7-1-draw">
+          <h4>Hand-Drawn Image 1: Flower</h4>
+          <figure>
+            <img src="media/part_1/part_1.7.1/foriginal.png" alt="Original Hand-drawn - Flower">
+            <figcaption>Original Hand-drawn Flower</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.1/f1.png" alt="Flower i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/f3.png" alt="Flower i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/f5.png" alt="Flower i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/f7.png" alt="Flower i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/f10.png" alt="Flower i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/f20.png" alt="Flower i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+
+          <h4>Hand-Drawn Image 2: Abstract</h4>
+          <figure>
+            <img src="media/part_1/part_1.7.1/aoriginal.png" alt="Original Hand-drawn - Abstract">
+            <figcaption>Original Hand-drawn Abstract</figcaption>
+          </figure>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.1/a1.png" alt="Abstract i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/a3.png" alt="Abstract i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/a5.png" alt="Abstract i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/a7.png" alt="Abstract i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/a10.png" alt="Abstract i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.1/a20.png" alt="Abstract i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1.7.2 Inpainting -->
+      <article class="card" id="p1-7-2">
+        <h2>1.7.2 — Inpainting with Diffusion</h2>
+        <p>
+          Using a binary mask and the forward process, I implemented an inpainting routine that keeps pixels outside the
+          mask consistent with the original (with appropriate noise) and lets the diffusion model hallucinate new content
+          inside the masked region.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Correctly-implemented <code>inpaint</code> function.</li>
+          <li>Campanile inpainting example (top of the tower replaced).</li>
+          <li>2 of my own images with custom masks and inpainting results: airplane and road scene.</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-7-2-campanile">
+          <h4>Campanile Inpainting</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.2/coriginal.png" alt="Campanile Original">
+              <figcaption>Campanile Original</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/c1.png" alt="Campanile inpaint result 1">
+              <figcaption>Campanile Inpaint Result 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/c2.png" alt="Campanile inpaint result 2">
+              <figcaption>Campanile Inpaint Result 2</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/c3.png" alt="Campanile inpaint result 3">
+              <figcaption>Campanile Inpaint Result 3</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="gallery stack" data-group="p1-7-2-own">
+          <h4>Road Scene Inpainting</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.2/roriginal.png" alt="Road original">
+              <figcaption>Original Road Scene</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/rmask.png" alt="Road mask">
+              <figcaption>Mask</figcaption>
+            </figure>
+          </div>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.2/r1.png" alt="Road inpaint iteration 1">
+              <figcaption>Inpaint Result 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r2.png" alt="Road inpaint iteration 2">
+              <figcaption>Iteration 2</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r3.png" alt="Road inpaint iteration 3">
+              <figcaption>Iteration 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r4.png" alt="Road inpaint iteration 4">
+              <figcaption>Iteration 4</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r5.png" alt="Road inpaint iteration 5">
+              <figcaption>Iteration 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r6.png" alt="Road inpaint iteration 6">
+              <figcaption>Iteration 6</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r7.png" alt="Road inpaint iteration 7">
+              <figcaption>Iteration 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/r8.png" alt="Road inpaint result">
+              <figcaption>Inpaint Result</figcaption>
+            </figure>
+          </div>
+
+          <h4>Airplane Inpainting</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.2/aoriginal.png" alt="Airplane Original">
+              <figcaption>Airplane Original</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/amask.png" alt="Airplane Mask">
+                <figcaption>Airplane Mask</figcaption>
+              </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.2/a1.png" alt="Airplane inpaint result">
+              <figcaption>Airplane Inpaint Result</figcaption>
+            </figure>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1.7.3 Text-conditional -->
+      <article class="card" id="p1-7-3">
+        <h2>1.7.3 — Text-Conditional Image-to-Image Translation</h2>
+        <p>
+          Here I reused the SDEdit pipeline but replaced <q>a high quality photo</q> with more specific prompts from my
+          custom prompt set, guiding the projection so that the final images look like both the original image and the new text description.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Campanile edits for a chosen text prompt at noise levels {1, 3, 5, 7, 10, 20}.</li>
+          <li>2 additional images edited under their own prompts (rocket ship and starry night style).</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-7-3-campanile">
+          <h4>Campanile → Text Prompt</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.3/c1.png" alt="Campanile text-cond i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/c3.png" alt="Campanile text-cond i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/c5.png" alt="Campanile text-cond i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/c7.png" alt="Campanile text-cond i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/c10.png" alt="Campanile text-cond i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/c20.png" alt="Campanile text-cond i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="gallery stack" data-group="p1-7-3-own">
+          <h4>Rocket Ship Style</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.3/r1.png" alt="Rocket text-cond i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/r3.png" alt="Rocket text-cond i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/r5.png" alt="Rocket text-cond i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/r7.png" alt="Rocket text-cond i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/r10.png" alt="Rocket text-cond i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/r20.png" alt="Rocket text-cond i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+
+          <h4>Starry Night Style</h4>
+          <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7.3/s1.png" alt="Starry text-cond i_start=1">
+              <figcaption>i_start = 1</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/s3.png" alt="Starry text-cond i_start=3">
+              <figcaption>i_start = 3</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/s5.png" alt="Starry text-cond i_start=5">
+              <figcaption>i_start = 5</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/s7.png" alt="Starry text-cond i_start=7">
+              <figcaption>i_start = 7</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/s10.png" alt="Starry text-cond i_start=10">
+              <figcaption>i_start = 10</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.7.3/s20.png" alt="Starry text-cond i_start=20">
+              <figcaption>i_start = 20</figcaption>
+            </figure>
+          </div>
+        </div>
+      </article>
+
+      <!-- 1.8 Visual Anagrams -->
+      <article class="card" id="p1-8">
+        <h2>1.8 — Visual Anagrams</h2>
+        <p>
+          I implemented <code>visual_anagrams</code>, which denoises an image with two prompts simultaneously by flipping the
+          image for the second prompt and averaging the two guided noise estimates. The result looks like one prompt upright
+          and the other when flipped upside down.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of <code>visual_anagrams</code> completed in Colab notebook.</li>
+          <li>3 visual illusions that change when flipped 180°.</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-8-anagrams">
+          <figure class="two-images">
+            <div>
+              <img src="media/part_1/part_1.8/painting_1.png" alt="Visual anagram 1 - Upright">
+              <figcaption>Upright: An oil painting of people around a campfire</figcaption>
+            </div>
+            <div>
+              <img src="media/part_1/part_1.8/painting_1.png" alt="Visual anagram 1 - Upside-down" style="transform: rotate(180deg);">
+              <figcaption>Upside-down: An oil painting of an old man</figcaption>
+            </div>
+          </figure>
+          <figure class="two-images">
+            <div>
+              <img src="media/part_1/part_1.8/painting_2.png" alt="Visual anagram 2 - Upright">
+              <figcaption>Upright view</figcaption>
+            </div>
+            <div>
+              <img src="media/part_1/part_1.8/painting_2.png" alt="Visual anagram 2 - Upside-down" style="transform: rotate(180deg);">
+              <figcaption>Upside-down view</figcaption>
+            </div>
+          </figure>
+          <figure class="two-images">
+            <div>
+              <img src="media/part_1/part_1.8/painting_3.png" alt="Visual anagram 3 - Upright">
+              <figcaption>Upright view</figcaption>
+            </div>
+            <div>
+              <img src="media/part_1/part_1.8/painting_3.png" alt="Visual anagram 3 - Upside-down" style="transform: rotate(180deg);">
+              <figcaption>Upside-down view</figcaption>
+            </div>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.9 Hybrid Images -->
+      <article class="card" id="p1-9">
+        <h2>1.9 — Hybrid Images via Factorized Diffusion</h2>
+        <p>
+          Inspired by Project 2, I implemented <code>make_hybrids</code> using the diffusion model's noise estimates. For two
+          prompts, I computed <code>ε₁</code> and <code>ε₂</code>, then combined low frequencies from one with high frequencies
+          from the other using Gaussian blur for the low-pass component and a residual for high-pass.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Correctly implemented <code>make_hybrids</code> in Colab notebook.</li>
+          <li>2 hybrid images demonstrating different low-/high-frequency combinations.</li>
+        </ul>
+
+        <div class="gallery stack" data-group="p1-9-hybrids">
+          <figure>
+            <img src="media/part_1/part_1.9/waterfall_skull_1.png" alt="Hybrid image - Waterfall and Skull">
+            <figcaption>Hybrid Image 1: Waterfall (low freq) + Skull (high freq)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.9/pencil_rocket_1.png" alt="Hybrid image - Pencil and Rocket">
+            <figcaption>Hybrid Image 2: Pencil (low freq) + Rocket (high freq)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- Part 2: Bells & Whistles -->
+      <!-- <article class="card assignment-part" id="bells">
+        <h2>Part 2 — Bells &amp; Whistles (Optional / CS280A)</h2>
+        <p>
+          This section is reserved for extra experiments, such as new types of visual anagrams (beyond vertical flips),
+          logo design using text-conditioned image-to-image, or any creative extensions built on top of the Part A pipeline.
+        </p>
+
+        <h3>Deliverables (if completed)</h3>
+        <ul>
+          <li>Visual anagrams using 2+ geometric transformations beyond vertical flips. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Custom CS180 course logo via diffusion editing. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Any additional creative experiments. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="bells-extras">
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Extra visual anagram. [TODO]</figcaption>
+          </figure>
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Course logo or other creative result. [TODO]</figcaption>
+          </figure>
+        </div>
+      </article> -->
+
+      <!-- Resources -->
+      <article class="card" id="resources">
+        <h2>Resources</h2>
+        <ul>
+          <li><a href="https://cal-cs180.github.io/fa25/hw/proj5/" target="_blank" rel="noopener">Project 5 Description</a></li>
+          <li><a href="https://colab.research.google.com/drive/19mp-ssAv3CQuVvFsUu2VvWEwnqLds9gx" target="_blank" rel="noopener">Official Project 5 Colab Notebook</a></li>
+          <li><a href="https://huggingface.co/DeepFloyd/IF-I-XL-v1.0" target="_blank" rel="noopener">DeepFloyd IF Model Card</a></li>
+          <li><a href="../index.html">Home</a></li>
+        </ul>
+      </article>
+    </main>
+
+    <!-- Lightbox modal (same as other projects) -->
+    <div id="lightbox" class="lb" aria-hidden="true">
+      <button class="lb-close" aria-label="Close">×</button>
+      <button class="lb-prev" aria-label="Previous">‹</button>
+      <img class="lb-img" alt="" />
+      <div class="lb-cap" role="note"></div>
+      <button class="lb-next" aria-label="Next">›</button>
+    </div>
+
+    <footer class="foot">
+      © <span id="y"></span> Karen Shieh — CS180
+    </footer>
+  </div>
+
+  <!-- Lightbox JS (reused) -->
+  <script>
+  (() => {
+    // Lightbox functionality is disabled for this page
+    /* 
+    const modal = document.getElementById('lightbox');
+    const imgEl = modal.querySelector('.lb-img');
+    const capEl = modal.querySelector('.lb-cap');
+    const btnPrev = modal.querySelector('.lb-prev');
+    const btnNext = modal.querySelector('.lb-next');
+    const btnClose = modal.querySelector('.lb-close');
+
+    const groups = {};
+    document.querySelectorAll('.gallery[data-group], .widefig[data-group]').forEach(container => {
+      const groupName = container.dataset.group;
+      const items = Array.from(container.querySelectorAll('img'));
+      groups[groupName] = items;
+      items.forEach((img, idx) => {
+        img.dataset.group = groupName;
+        img.dataset.index = idx;
+        img.addEventListener('click', (e) => {
+          const t = e.currentTarget;
+          currentGroup = t.dataset.group;
+          currentIndex = parseInt(t.dataset.index, 10);
+          openLightbox();
+        });
+      });
+    });
+
+    let currentGroup = null;
+    let currentIndex = 0;
+    let prevFocus = null;
+
+    function openLightbox() {
+      const list = groups[currentGroup];
+      if (!list || !list.length) return;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+      prevFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      modal.setAttribute('aria-hidden','false');
+      btnClose.focus();
+      addListeners(true);
+    }
+    function closeLightbox() {
+      modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow = '';
+      addListeners(false);
+      if (prevFocus && typeof prevFocus.focus === 'function') prevFocus.focus();
+    }
+    function show(src, alt) { imgEl.src = src; imgEl.alt = alt; capEl.textContent = alt; }
+    function next() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex + 1) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function prev() {
+      const list = groups[currentGroup];
+      currentIndex = (currentIndex - 1 + list.length) % list.length;
+      const node = list[currentIndex];
+      show(node.src, node.alt || '');
+    }
+    function onKey(e) {
+      if (modal.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') next();
+      else if (e.key === 'ArrowLeft') prev();
+    }
+    function onBackdropClick(e) { if (e.target === modal) closeLightbox(); }
+    let x0 = null;
+    function onTouchStart(e){ x0 = e.changedTouches[0].clientX; }
+    function onTouchEnd(e){
+      if (x0 == null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+      x0 = null;
+    }
+    function addListeners(on) {
+      const m = on ? 'addEventListener' : 'removeEventListener';
+      document[m]('keydown', onKey);
+      modal[m]('click', onBackdropClick);
+      imgEl[m]('touchstart', onTouchStart, {passive:true});
+      imgEl[m]('touchend', onTouchEnd, {passive:true});
+    }
+    btnClose.addEventListener('click', closeLightbox);
+    btnNext.addEventListener('click', next);
+    btnPrev.addEventListener('click', prev);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeLightbox(); });
+    */
+  })();
+  </script>
+
+  <!-- Year + Theme toggle + Outline highlight -->
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    function syncButton(){
+      const mode = root.getAttribute('data-theme');
+      if (mode === 'light') { icon.textContent = '🌞'; label.textContent = 'Light'; }
+      else { icon.textContent = '🌙'; label.textContent = 'Dark'; }
+    }
+    syncButton();
+    btn.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      syncButton();
+    });
+
+    function updateActiveSection() {
+      const sections = document.querySelectorAll('section[id], article[id]');
+      const navLinks = document.querySelectorAll('.outline-nav a');
+      let currentSection = '';
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 100 && rect.bottom >= 100) {
+          currentSection = section.id;
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentSection) {
+          link.classList.add('active');
+        }
+      });
+    }
+    window.addEventListener('scroll', updateActiveSection);
+    document.addEventListener('DOMContentLoaded', updateActiveSection);
+  </script>
+</body>
+</html>

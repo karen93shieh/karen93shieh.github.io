@@ -108,7 +108,7 @@
           any ArUco detection or pose estimation.
         </p>
 
-        <pre><code># Loading and normalizing EXIF orientation
+        <!-- <pre><code># Loading and normalizing EXIF orientation
 from PIL import Image, ImageOps
 import numpy as np
 import glob
@@ -120,7 +120,7 @@ def load_images(folder):
         img = Image.open(p)
         img = ImageOps.exif_transpose(img)   # handle phone EXIF rotation
         imgs.append(np.array(img))
-    return np.stack(imgs, axis=0)</code></pre>
+    return np.stack(imgs, axis=0)</code></pre> -->
 
         <h3 id="part0-1">0.1: Calibrating Your Camera</h3>
         <p>
@@ -151,7 +151,7 @@ def load_images(folder):
           without recalibrating every time.
         </p>
 
-        <pre><code># Build 3D object points for each ArUco marker (in mm)
+        <!-- <pre><code># Build 3D object points for each ArUco marker (in mm)
 def build_aruco_board(marker_length, sep_x, sep_y, ids):
     obj_points = {}
     for row in range(2):
@@ -175,7 +175,7 @@ ret, K, dist, rvecs, tvecs = cv2.calibrateCamera(
     imageSize=(W, H),
     cameraMatrix=None,
     distCoeffs=None
-)</code></pre>
+)</code></pre> -->
 
         <div class="gallery" data-group="p0-aruco">
           <figure>
@@ -274,7 +274,7 @@ ret, K, dist, rvecs, tvecs = cv2.calibrateCamera(
           <li>Assemble into a 4×4 homogeneous matrix</li>
         </ol>
 
-        <pre><code># SolvePnP + convert to c2w
+        <!-- <pre><code># SolvePnP + convert to c2w
 def estimate_c2w(tag_obj_points, tag_img_points, K, dist):
     # Solve for world-to-camera pose
     _, rvec, tvec = cv2.solvePnP(
@@ -291,7 +291,7 @@ def estimate_c2w(tag_obj_points, tag_img_points, K, dist):
     c2w = np.eye(4, dtype=np.float32)
     c2w[:3, :3] = R_c2w
     c2w[:3, 3] = t_c2w[:, 0]
-    return c2w</code></pre>
+    return c2w</code></pre> -->
 
         <p>
           To sanity-check the poses, I used <strong>Viser</strong> to draw each camera as a little frustum in 3D and

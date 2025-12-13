@@ -123,11 +123,12 @@
           <ul>
             <li>a view of UC Berkeley</li>
             <li>a hybrid image of bird and plane</li>
-            <li>an anagram of a keyboard and street</li>
+            <li>a visual anagram of a street and a keyboard</li>
           </ul>
           With the same prompt, the quality of the images improve as the number of inference steps increases. Using
           UC Berkeley as an example, the image becomes more detailed and the background becomes more visible as the number of inference steps increases.
           The buildings are less generic and have different styles and textures. 
+          The more realistic the prompt is (something that the model has seen before), the better the image quality is.
         </p>
         <p>
           As for the seed, I used the default value, which is setted up to be 100.
@@ -248,7 +249,20 @@
           I then used with the forward equation to estimate <code>x₀</code> (by solving for <code>x₀</code> in the forward equation).
         </p>
 
-        
+        <div class="gallery" data-group="p1-3-ocampanile">
+          <figure>
+            <img src="media/part_1/part_1.7/coriginal.png" alt="Original Campanile">
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.7/coriginal.png" alt="Original Campanile">
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_1/part_1.7/coriginal.png" alt="Original Campanile">
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+        </div>
         <div class="gallery" data-group="p1-3-campanile">
           <figure>
             <img src="media/part_1/part_1.1/250.png" alt="Noisy Campanile at t=250">
@@ -299,32 +313,36 @@
           <div class="gallery">
             <figure>
               <img src="media/part_1/part_1.4/0.png" alt="Iteration 0">
-              <figcaption>t = 0</figcaption>
+              <figcaption>t = 690</figcaption>
             </figure>
             <figure>
               <img src="media/part_1/part_1.4/1.png" alt="Iteration 5">
-              <figcaption>t = 90</figcaption>
-            </figure>
-            <figure>
-              <img src="media/part_1/part_1.4/2.png" alt="Iteration 10">
-              <figcaption>t =  240</figcaption>
-            </figure>
-            <figure>
-              <img src="media/part_1/part_1.4/3.png" alt="Iteration 15">
-              <figcaption>t = 390</figcaption>
-            </figure>
-            <figure>
-              <img src="media/part_1/part_1.4/4.png" alt="Iteration 20">
               <figcaption>t = 540</figcaption>
             </figure>
             <figure>
+              <img src="media/part_1/part_1.4/2.png" alt="Iteration 10">
+              <figcaption>t =  390</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/3.png" alt="Iteration 15">
+              <figcaption>t = 240</figcaption>
+            </figure>
+            <figure>
+              <img src="media/part_1/part_1.4/4.png" alt="Iteration 20">
+              <figcaption>t = 90</figcaption>
+            </figure>
+            <figure>
               <img src="media/part_1/part_1.4/5.png" alt="Iteration 25">
-              <figcaption>t = 690</figcaption>
+              <figcaption>t = 0</figcaption>
             </figure>
           </div>
 
           <h4>Comparison of Methods</h4>
           <div class="gallery">
+            <figure>
+              <img src="media/part_1/part_1.7/coriginal.png" alt="Original Campanile">
+              <figcaption>Original Campanile</figcaption>
+            </figure>
             <figure>
               <img src="media/part_1/part_1.4/final_clean.png" alt="Final iterative denoised">
               <figcaption>Final Iterative Denoise (Clean)</figcaption>
@@ -1025,12 +1043,6 @@
           too high, the model is not able to denoise the digits nearly as well.
         </p>
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Sample denoising results on the test set for several out-of-distribution σ values (e.g., 0.2, 0.8, 1.0). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Short explanation of how performance changes as σ moves away from the training value and why. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
-
         <div class="gallery stack" data-group="b1-2-2-ood">
           <figure>
             <img src="media/part_b_1/1.2.2.png" alt="Denoiser results across OOD σ values using the same underlying digits">
@@ -1188,11 +1200,6 @@
           time <code>t</code> and class label <code>c</code>. Periodically I also sample without class-conditioning to
           check unconditional behavior.
         </p>
-
-        <h3>Deliverables</h3>
-        <ul>
-          <li>A training loss curve plot for the class-conditioned UNet over its full training schedule. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
 
         <div class="gallery stack" data-group="b2-5-algo">
           <figure>

@@ -44,6 +44,23 @@
         <li><a href="#p1-7-3">1.7.3 — Text-Conditional</a></li>
         <li><a href="#p1-8">1.8 — Visual Anagrams</a></li>
         <li><a href="#p1-9">1.9 — Hybrid Images</a></li>
+
+        <!-- Part B: Flow Matching -->
+        <li><a href="#part-b">Part B — Flow Matching</a></li>
+        <li><a href="#b1">1 — Single-Step Denoising UNet</a></li>
+        <li><a href="#b1-2">1.2 — Noising Process</a></li>
+        <li><a href="#b1-2-1">1.2.1 — Training</a></li>
+        <li><a href="#b1-2-2">1.2.2 — OOD Noise</a></li>
+        <li><a href="#b1-2-3">1.2.3 — Denoising Pure Noise</a></li>
+        <li><a href="#b2">2 — Flow Matching Model</a></li>
+        <li><a href="#b2-1">2.1 — Time-Conditioned UNet</a></li>
+        <li><a href="#b2-2">2.2 — Training Time-Conditioned UNet</a></li>
+        <li><a href="#b2-3">2.3 — Sampling from Time-Conditioned UNet</a></li>
+        <li><a href="#b2-4">2.4 — Class-Conditioned UNet</a></li>
+        <li><a href="#b2-5">2.5 — Training Class-Conditioned UNet</a></li>
+        <li><a href="#b2-6">2.6 — Class-Conditional Sampling</a></li>
+        <!-- <li><a href="#b3">3 — Bells & Whistles</a></li> -->
+
         <!-- <li><a href="#bells">Part 2 — Bells & Whistles</a></li> -->
         <li><a href="#resources">Resources</a></li>
       </ul>
@@ -60,7 +77,7 @@
     <header class="hero">
       <h1>Project 5: The Power of Diffusion Models</h1>
       <p class="subtitle">
-        Exploring DeepFloyd IF, forward/denoising processes, and fun applications like inpainting, visual anagrams, and hybrid images.
+        Exploring DeepFloyd IF, forward/denoising processes, flow matching on MNIST, and fun applications like inpainting, visual anagrams, and hybrid images.
       </p>
       <ul class="meta">
         <li><strong>Date:</strong> Nov 2025</li>
@@ -79,8 +96,9 @@
           schemes, and then apply them to tasks like image-to-image translation, inpainting, visual anagrams, and hybrid images.
         </p>
         <p>
-          All core work for Part A is done in the provided Colab notebook, but this webpage summarizes my implementation,
-          visual results, and short reflections for each sub-part.
+          In Part B, I build diffusion-style models <em>from scratch</em> on MNIST. I first implement and train a single-step
+          UNet denoiser, and then extend it into a time-conditioned flow matching model, with optional class-conditioning
+          and bells & whistles for improved generation quality.
         </p>
         <p class="callout">
           Tip: All deliverable slots have <span class="placeholder-inline">[TODO]</span> markers so I can quickly drop in figures and captions from my notebook.
@@ -128,19 +146,22 @@
           <li>Reported random seed used consistently for all subsequent parts. <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
-        <div class="gallery stack" data-group="p0-samples">
-          <!-- TODO: replace with actual img tags -->
-          <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>Example prompt &amp; DeepFloyd IF output #1. [TODO]</figcaption>
+        <div class="gallery" data-group="p0-samples">
+          <figure>
+            <img src="media/part_0/UC_Berkeley_20.png" alt="UC Berkeley prompt with 20 inference steps">
+            <figcaption>UC Berkeley (20 inference steps)</figcaption>
           </figure>
-          <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>Example prompt &amp; output #2. [TODO]</figcaption>
+          <figure>
+            <img src="media/part_0/UC_Berkeley_100.png" alt="UC Berkeley prompt with 100 inference steps">
+            <figcaption>UC Berkeley (100 inference steps)</figcaption>
           </figure>
-          <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>Example prompt &amp; output #3. [TODO]</figcaption>
+          <figure>
+            <img src="media/part_0/bird_plane_hybrid_100.png" alt="Bird and plane hybrid image">
+            <figcaption>Bird and plane hybrid</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_0/keyboard_street_anagram_40.png" alt="Keyboard and street anagram">
+            <figcaption>Keyboard and street anagram</figcaption>
           </figure>
         </div>
       </article>
@@ -202,7 +223,7 @@
         <h3>Deliverables</h3>
         <ul>
           <li>For each noisy Campanile image (<code>t = 250, 500, 750</code>), show the best Gaussian-denoised result side-by-side.</li>
-          <li>Reflection: Gaussian blur struggles significantly compared to diffusion-based denoisers because it uniformly smooths the entire image, losing important high-frequency details and edges. It cannot distinguish between noise and actual image content, whereas diffusion models learn the natural image manifold and can intelligently restore structure.</li>
+          <li>Reflection on why naive Gaussian blur cannot compete with learned diffusion denoisers. <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
         <div class="gallery" data-group="p1-1-campanile">
@@ -248,7 +269,7 @@
         <h3>Deliverables</h3>
         <ul>
           <li>One-step denoised Campanile for <code>t = 250, 500, 750</code>.</li>
-          <li>Discussion: As the noise level increases, the one-step denoising quality degrades significantly. At t=250, the model can recover reasonable structure, but at t=750, a single denoising step struggles to recover fine details and the image appears much blurrier. This demonstrates why iterative denoising is necessary for high-quality results.</li>
+          <li>Brief discussion on why a single reverse step is insufficient at high noise levels. <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
         <div class="gallery" data-group="p1-3-onestep">
@@ -280,7 +301,7 @@
         <ul>
           <li>Strided timestep schedule implemented with stride of 30 from 990 to 0.</li>
           <li>Iterative denoising process showing gradual improvement every 5 iterations.</li>
-          <li>Final clean image demonstrates superior quality compared to one-step denoising and Gaussian blur methods.</li>
+          <li>Comparison of iterative denoising vs one-step denoising and Gaussian blur.</li>
         </ul>
 
         <div class="gallery stack" data-group="p1-4-iter">
@@ -341,7 +362,7 @@
         <h3>Deliverables</h3>
         <ul>
           <li>5 sampled images for the prompt <q>a high quality photo</q>.</li>
-          <li>Comment on diversity vs. realism without CFG: The images show reasonable realism but lack the sharpness and detail that CFG provides. The diversity is good with various subjects appearing.</li>
+          <li>Comment on diversity vs. realism without CFG. <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
         <div class="gallery" data-group="p1-5-samples">
@@ -386,7 +407,7 @@
         <ul>
           <li>Implementation of <code>iterative_denoise_cfg</code> completed in Colab notebook.</li>
           <li>5 CFG-sampled images for <q>a high quality photo</q> with <code>γ = 7</code>.</li>
-          <li>Comparison: CFG samples show significantly improved sharpness, detail, and more coherent structure compared to non-CFG samples. The guidance helps the model produce images that better adhere to the prompt.</li>
+          <li>Short comparison of CFG vs non-CFG samples (sharpness, prompt adherence). <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
         <div class="gallery" data-group="p1-6-cfg">
@@ -425,7 +446,7 @@
         <h3>Deliverables</h3>
         <ul>
           <li>Campanile edits for <code>i_start ∈ {1, 3, 5, 7, 10, 20}</code>.</li>
-          <li>Same procedure applied to 2 personal test images (Sather Gate and Hearst Mining).</li>
+          <li>Same procedure applied to 2 personal test images (e.g., Sather Gate and Hearst Mining).</li>
         </ul>
 
         <div class="gallery stack" data-group="p1-7-campanile">
@@ -538,7 +559,7 @@
 
         <h3>Deliverables</h3>
         <ul>
-          <li>1 web image (sunset) with edits at noise levels {1, 3, 5, 7, 10, 20}.</li>
+          <li>1 web image (e.g., sunset) with edits at noise levels {1, 3, 5, 7, 10, 20}.</li>
           <li>2 hand-drawn images with edits at the same noise levels.</li>
         </ul>
 
@@ -655,8 +676,8 @@
         <h3>Deliverables</h3>
         <ul>
           <li>Correctly-implemented <code>inpaint</code> function.</li>
-          <li>Campanile inpainting example (top of the tower replaced).</li>
-          <li>2 of my own images with custom masks and inpainting results: airplane and road scene.</li>
+          <li>Campanile inpainting example (e.g., top of the tower replaced).</li>
+          <li>2 of my own images with custom masks and inpainting results.</li>
         </ul>
 
         <div class="gallery stack" data-group="p1-7-2-campanile">
@@ -757,7 +778,7 @@
         <h3>Deliverables</h3>
         <ul>
           <li>Campanile edits for a chosen text prompt at noise levels {1, 3, 5, 7, 10, 20}.</li>
-          <li>2 additional images edited under their own prompts (rocket ship and starry night style).</li>
+          <li>2 additional images edited under their own prompts.</li>
         </ul>
 
         <div class="gallery stack" data-group="p1-7-3-campanile">
@@ -925,29 +946,383 @@
         </div>
       </article>
 
-      <!-- Part 2: Bells & Whistles -->
-      <!-- <article class="card assignment-part" id="bells">
-        <h2>Part 2 — Bells &amp; Whistles (Optional / CS280A)</h2>
+      <!-- ============================== -->
+      <!-- Part B: Flow Matching from Scratch -->
+      <!-- ============================== -->
+
+      <!-- Part B header -->
+      <article class="card assignment-part" id="part-b">
+        <h2>Part B — Flow Matching from Scratch!</h2>
         <p>
-          This section is reserved for extra experiments, such as new types of visual anagrams (beyond vertical flips),
-          logo design using text-conditioned image-to-image, or any creative extensions built on top of the Part A pipeline.
+          In Part B, I switch from using a pre-trained diffusion model to <em>training my own</em> UNets on MNIST. I first
+          implement a single-step denoising UNet, and then train a time-conditioned flow matching model, optionally with
+          class-conditioning. This part follows the structure and deliverables of the Part B handout.
+        </p>
+      </article>
+
+      <!-- 1: Single-step denoising UNet (overview + architecture) -->
+      <article class="card" id="b1">
+        <h2>1 — Training a Single-Step Denoising UNet</h2>
+        <p>
+          The goal of this section is to build a UNet-based denoiser that maps a noisy grayscale MNIST image
+          <code>z</code> back to its clean version <code>x</code> by optimizing an L2 loss:
+        </p>
+        <div class="math-equation">
+          <p><code>L(θ) = E<sub>z,x</sub> ∥D<sub>θ</sub>(z) − x∥²</code></p>
+        </div>
+        <p>
+          The UNet architecture follows the diagram in the project handout, using Conv/DownConv/UpConv blocks, skip
+          connections, and a flatten/unflatten bottleneck. All code is implemented in the provided Colab notebook.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of the UNet architecture from the handout (including Conv, DownConv, UpConv, Flatten, Unflatten blocks). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Short description of how the skip connections and bottleneck are wired in code. <span class="placeholder-inline">[TODO]</span></li>
+          <li>(Optional) Schematic or pseudo-code summarizing the forward pass. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b1-arch">
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>UNet architecture sketch or diagram. [TODO]</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.2: Noising process viz -->
+      <article class="card" id="b1-2">
+        <h2>1.2 — Noising Process & Training Data</h2>
+        <p>
+          To train the denoiser, I generate noisy/clean pairs by taking clean MNIST digits <code>x</code> and adding Gaussian
+          noise with different standard deviations <code>σ</code>:
+        </p>
+        <div class="math-equation">
+          <p><code>z = x + σ · ε, &nbsp; ε ~ N(0, I)</code></p>
+        </div>
+        <p>
+          I visualize how the digits change as <code>σ</code> increases over the set
+          <code>σ ∈ {0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0}</code>.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>A visualization of the noising process over MNIST for multiple <code>σ</code> values. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Brief note on how noise level affects recognizability of digits. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b1-2-noise">
+          <figure>
+            <img src="media/part_b_1/1.2_sigma.png" alt="Noising process for one example digit across all σ values">
+            <figcaption>Noising process for one example digit across all σ values</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.2.1: Training denoiser -->
+      <article class="card" id="b1-2-1">
+        <h2>1.2.1 — Training the UNet Denoiser</h2>
+        <p>
+          I train the UNet denoiser on noisy MNIST digits using the Adam optimizer and a 5-epoch schedule (batch size 256),
+          following the Part B specification. Each batch is noised on the fly so the network sees fresh perturbations every epoch.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>A training loss curve plot (denoiser on MNIST with σ = 0.5) over the full training process. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sample denoising results on the test set at noise level σ = 0.5 after the 1st epoch. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sample denoising results on the test set at noise level σ = 0.5 after the 5th epoch. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b1-2-1-training">
+          <figure>
+            <img src="media/part_b_1/1.2.1_loss.png" alt="Training loss curve for the single-step denoiser">
+            <figcaption>Training loss curve for the single-step denoiser</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_1/1.2.1_result.png" alt="Test set denoising results after 1 and 5 epochs (σ = 0.5)">
+            <figcaption>Test set denoising results after 1 and 5 epochs (σ = 0.5)</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.2.2: OOD noise -->
+      <article class="card" id="b1-2-2">
+        <h2>1.2.2 — Out-of-Distribution Noise Levels</h2>
+        <p>
+          The denoiser is trained specifically at σ = 0.5. Here I probe how well it generalizes to noise levels it has never
+          seen during training by applying it to test digits with different σ values.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Sample denoising results on the test set for several out-of-distribution σ values (e.g., 0.2, 0.8, 1.0). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Short explanation of how performance changes as σ moves away from the training value and why. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b1-2-2-ood">
+          <figure>
+            <img src="media/part_b_1/1.2.2.png" alt="Denoiser results across OOD σ values using the same underlying digits">
+            <figcaption>Denoiser results across OOD σ values using the same underlying digits</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 1.2.3: Denoising pure noise -->
+      <article class="card" id="b1-2-3">
+        <h2>1.2.3 — Denoising Pure Noise</h2>
+        <p>
+          To turn denoising into a generative task, I now train the UNet to map pure Gaussian noise <code>z = ε ~ N(0, I)</code>
+          directly to clean MNIST digits <code>x</code>. This uses the same architecture and loss, but the input no longer
+          contains any recognizable structure.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>A training loss curve plot for the denoiser that takes pure noise as input. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sample outputs from pure noise after 1 epoch of training. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sample outputs from pure noise after 5 epochs of training. <span class="placeholder-inline">[TODO]</span></li>
+          <li>A brief discussion of the patterns that emerge and how they relate to averaging over many training digits (centroid-like behavior). <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b1-2-3-pure">
+          <figure>
+            <img src="media/part_b_1/1.2.3_loss.png" alt="Training loss curve for pure-noise denoiser">
+            <figcaption>Training loss curve for pure-noise denoiser</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_1/1.2.3_result.png" alt="Generated samples from pure noise after 1 and 5 epochs">
+            <figcaption>Generated samples from pure noise after 1 and 5 epochs</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2: Flow matching model overview -->
+      <article class="card" id="b2">
+        <h2>2 — Training a Flow Matching Model</h2>
+        <p>
+          In this part I move to iterative denoising using a flow matching formulation. I define a linear path in data space
+          between pure noise <code>x₀</code> and a clean digit <code>x₁</code>, and train a time-conditioned UNet to predict
+          the flow <code>u(x<sub>t</sub>, t) = x₁ − x₀</code> along the path.
+        </p>
+        <div class="math-equation">
+          <p><code>x<sub>t</sub> = (1 − t) x₀ + t x₁, &nbsp; t ∈ [0, 1]</code></p>
+          <p><code>u(x<sub>t</sub>, t) = d x<sub>t</sub> / dt = x₁ − x₀</code></p>
+        </div>
+      </article>
+
+      <!-- 2.1: Time-conditioned UNet -->
+      <article class="card" id="b2-1">
+        <h2>2.1 — Adding Time Conditioning to the UNet</h2>
+        <p>
+          I extend the UNet with fully-connected conditioning blocks (FCBlocks) that embed the scalar timestep <code>t</code>,
+          and inject this conditioning into the unflatten and upsampling layers via multiplicative modulation as suggested
+          in the handout.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of FCBlocks and time-conditioning in the UNet (following the provided diagram). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Short description of where <code>t</code> is injected (unflatten, upsampling) and how it changes the activations. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-1-time">
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Sketch or pseudo-code showing time-conditioned UNet data flow. [TODO]</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2.2: Training time-conditioned UNet -->
+      <article class="card" id="b2-2">
+        <h2>2.2 — Training the Time-Conditioned UNet</h2>
+        <p>
+          I train the time-conditioned UNet using the flow matching loss:
+        </p>
+        <div class="math-equation">
+          <p><code>L(θ) = E<sub>x₀,x₁,t</sub> ∥(x₁ − x₀) − u<sub>θ</sub>(x<sub>t</sub>, t)∥²</code></p>
+        </div>
+        <p>
+          Each batch samples a random clean digit <code>x₁</code>, a random noise sample <code>x₀ ~ N(0, I)</code>, and a
+          random timestep <code>t ~ U[0,1]</code>. I use batch size 64, Adam with learning rate 1e-2, and an exponential
+          LR scheduler as described in the handout.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>A training loss curve plot for the time-conditioned UNet across the full training schedule. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-2-train">
+          <figure>
+            <img src="media/part_b_2/2.2_loss.png" alt="Training loss curve for the time-conditioned UNet">
+            <figcaption>Training loss curve for the time-conditioned UNet</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2.3: Sampling from the time-conditioned UNet -->
+      <article class="card" id="b2-3">
+        <h2>2.3 — Sampling from the Time-Conditioned UNet</h2>
+        <p>
+          Using Algorithm 2 from the handout, I generate digits by starting from pure noise and stepping along
+          the learned flow field according to a discretized time schedule. The digits are not perfect, but become legible
+          as training progresses.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Sampling results from the time-conditioned UNet after 1 epoch of training. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sampling results from the time-conditioned UNet after 5 epochs. <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sampling results after 10 epochs. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-3-samples">
+          <figure>
+            <img src="media/part_b_2/2.3_epoch1.png" alt="Samples after 1 epoch (time-conditioned only)">
+            <figcaption>Samples after 1 epoch (time-conditioned only)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.3_epoch5.png" alt="Samples after 5 epochs">
+            <figcaption>Samples after 5 epochs</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.3.3_epoch10.png" alt="Samples after 10 epochs">
+            <figcaption>Samples after 10 epochs</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2.4: Class-conditioned UNet -->
+      <article class="card" id="b2-4">
+        <h2>2.4 — Adding Class Conditioning</h2>
+        <p>
+          To improve quality and controllability, I add class-conditioning on the digit label (0–9) using additional
+          FCBlocks. The class is represented as a one-hot vector and injected alongside <code>t</code> into the UNet.
+          I also implement classifier-free guidance by randomly dropping the class embedding with probability
+          <code>p<sub>uncond</sub> = 0.1</code>.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Implementation of class-conditioning (extra FCBlocks, one-hot labels, random dropping). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Short explanation of how class-conditioning changes the unflatten and upsampling modulations. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-4-class">
+          <figure class="placeholder-figure">
+            <div class="placeholder-box"></div>
+            <figcaption>Diagram or pseudo-code for joint time + class conditioning. [TODO]</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2.5: Training class-conditioned UNet -->
+      <article class="card" id="b2-5">
+        <h2>2.5 — Training the Class-Conditioned UNet</h2>
+        <p>
+          I train the class-conditioned flow matching UNet with the same loss as before, but now passing in both
+          time <code>t</code> and class label <code>c</code>. Periodically I also sample without class-conditioning to
+          check unconditional behavior.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>A training loss curve plot for the class-conditioned UNet over its full training schedule. <span class="placeholder-inline">[TODO]</span></li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-5-train">
+          <figure>
+            <img src="media/part_b_2/2.5_loss.png" alt="Training loss curve for class-conditioned flow matching UNet">
+            <figcaption>Training loss curve for class-conditioned flow matching UNet</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2.6: Class-conditional sampling -->
+      <article class="card" id="b2-6">
+        <h2>2.6 — Class-Conditional Sampling with Guidance</h2>
+        <p>
+          Finally, I sample digits from the class-conditioned UNet using classifier-free guidance with guidance scale
+          <code>γ = 5.0</code>. For each class, I generate multiple samples and compare convergence speed and quality to
+          the time-only model.
+        </p>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li>Sampling results from the class-conditioned UNet for 1 epoch of training (4 samples per class 0–9). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sampling results for 5 epochs (4 samples per class). <span class="placeholder-inline">[TODO]</span></li>
+          <li>Sampling results for 10 epochs (4 samples per class). <span class="placeholder-inline">[TODO]</span></li>
+          <li>
+            Additional run without the exponential LR scheduler: samples after training and a short description of how you
+            adjusted hyperparameters (e.g., lower LR, more epochs) to maintain performance without a scheduler. <span class="placeholder-inline">[TODO]</span>
+          </li>
+        </ul>
+
+        <div class="gallery stack" data-group="b2-6-samples">
+          <h4>With Exponential LR Scheduler</h4>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch1_scheduler.png" alt="Grid of 4 samples per class after 1 epoch (γ = 5)">
+            <figcaption>Grid of 4 samples per class after 1 epoch (γ = 5)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch5_scheduler.png" alt="Grid of samples after 5 epochs">
+            <figcaption>Grid of samples after 5 epochs</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch10_scheduler.png" alt="Grid of samples after 10 epochs">
+            <figcaption>Grid of samples after 10 epochs</figcaption>
+          </figure>
+          
+          <h4>Without LR Scheduler</h4>
+          <figure>
+            <img src="media/part_b_2/2.6_loss_no_scheduler.png" alt="Training loss curve without scheduler">
+            <figcaption>Training loss curve without scheduler</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch1_no_scheduler.png" alt="Samples after 1 epoch without scheduler">
+            <figcaption>Samples after 1 epoch without scheduler</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch5_no_scheduler.png" alt="Samples after 5 epochs without scheduler">
+            <figcaption>Samples after 5 epochs without scheduler</figcaption>
+          </figure>
+          <figure>
+            <img src="media/part_b_2/2.6_epoch10_no_scheduler.png" alt="Samples after 10 epochs without scheduler">
+            <figcaption>Samples after 10 epochs without scheduler</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 3: Bells & Whistles -->
+      <!-- <article class="card assignment-part" id="b3">
+        <h2>3 — Bells &amp; Whistles (Optional / CS280A)</h2>
+        <p>
+          This section is for extensions beyond the base flow matching model, such as better architectures, longer
+          training schedules, or applying the model to other grayscale datasets (SVHN, Fashion-MNIST, CIFAR10, etc.).
         </p>
 
         <h3>Deliverables (if completed)</h3>
         <ul>
-          <li>Visual anagrams using 2+ geometric transformations beyond vertical flips. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Custom CS180 course logo via diffusion editing. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Any additional creative experiments. <span class="placeholder-inline">[TODO]</span></li>
+          <li>
+            Improved time-conditioned-only UNet (better samples than the baseline in 2.3), with visualizations and a brief
+            description of what you changed (e.g., more channels, more epochs). <span class="placeholder-inline">[TODO]</span>
+          </li>
+          <li>
+            Any experiments on alternative datasets (SVHN, Fashion-MNIST, CIFAR10) with generated samples and training notes. <span class="placeholder-inline">[TODO]</span>
+          </li>
+          <li>Your own creative experiments (e.g., stylized digits, conditional edits, etc.). <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
-        <div class="gallery stack" data-group="bells-extras">
+        <div class="gallery stack" data-group="b3-extras">
           <figure class="placeholder-figure">
             <div class="placeholder-box"></div>
-            <figcaption>Extra visual anagram. [TODO]</figcaption>
+            <figcaption>Improved time-only flow matching samples. [TODO]</figcaption>
           </figure>
           <figure class="placeholder-figure">
             <div class="placeholder-box"></div>
-            <figcaption>Course logo or other creative result. [TODO]</figcaption>
+            <figcaption>Extra experiments on other datasets. [TODO]</figcaption>
           </figure>
         </div>
       </article> -->
@@ -1014,7 +1389,7 @@
     function openLightbox() {
       const list = groups[currentGroup];
       if (!list || !list.length) return;
-      const node = list[currentIndex];
+      const node = list[currentGroup];
       show(node.src, node.alt || '');
       prevFocus = document.activeElement;
       document.body.style.overflow = 'hidden';

@@ -109,7 +109,7 @@
       <article class="card assignment-part" id="part-a">
         <h2>Part A — The Power of Diffusion Models</h2>
         <p>
-          This section follows the project handout: setting up DeepFloyd IF, implementing sampling loops, and exploring 
+          This section follows the project specs: setting up DeepFloyd IF, implementing sampling loops, and exploring 
           several applications of diffusion models using the provided denoisers and schedulers.
         </p>
       </article>
@@ -161,7 +161,7 @@
       </article>
 
       <!-- Part 1 header -->
-      <article class="card assignment-part" id="p1">
+      <article class="card" id="p1">
         <h2>Part 1 — Sampling Loops</h2>
         <p>
           In Part 1, I implement the forward diffusion process, one-step and iterative denoising, and then use these
@@ -929,7 +929,7 @@
         <p>
           In Part B, I switch from using a pre-trained diffusion model to <em>training my own</em> UNets on MNIST. I first
           implement a single-step denoising UNet, and then train a time-conditioned flow matching model, optionally with
-          class-conditioning. This part follows the structure and deliverables of the Part B handout.
+          class-conditioning. This part follows the structure and deliverables of the Part B project specs.
         </p>
       </article>
 
@@ -944,23 +944,38 @@
           <p><code>L(θ) = E<sub>z,x</sub> ∥D<sub>θ</sub>(z) − x∥²</code></p>
         </div>
         <p>
-          The UNet architecture follows the diagram in the project handout, using Conv/DownConv/UpConv blocks, skip
+          The UNet architecture follows the diagram in the project specs, using Conv/DownConv/UpConv blocks, skip
           connections, and a flatten/unflatten bottleneck. All code is implemented in the provided Colab notebook.
         </p>
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Implementation of the UNet architecture from the handout (including Conv, DownConv, UpConv, Flatten, Unflatten blocks). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Short description of how the skip connections and bottleneck are wired in code. <span class="placeholder-inline">[TODO]</span></li>
-          <li>(Optional) Schematic or pseudo-code summarizing the forward pass. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
-
         <div class="gallery stack" data-group="b1-arch">
           <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>UNet architecture sketch or diagram. [TODO]</figcaption>
+            <img src="media/unconditional_arch.png" alt="mediaunconditional_arch">
+            <figcaption>Unconditional UNet Architecture</figcaption>
           </figure>
         </div>
+
+        <div class="gallery stack" data-group="b1-operations">
+          <figure class="placeholder-figure">
+            <img src="media/atomic_ops_new.png" alt="mediaunconditional_arch">
+            <figcaption>Standard UNet Operations</figcaption>
+          </figure>
+        </div>
+
+        <p>
+          The operations can be described as follows:
+        </p>
+
+        <ol>
+          <li><strong>Conv</strong> is a convolutional layer that preserves image resolution while modifying the channel dimension.</li>
+          <li><strong>DownConv</strong> is a convolutional layer that downsamples the tensor by a factor of 2.</li>
+          <li><strong>UpConv</strong> is a convolutional layer that upsamples the tensor by a factor of 2.</li>
+          <li><strong>Flatten</strong> is an average pooling layer that reduces a 7×7 tensor to a 1×1 tensor, where 7 represents the final height and width after all downsampling operations.</li>
+          <li><strong>Unflatten</strong> is a convolutional layer that expands a 1×1 tensor back to a 7×7 tensor through upsampling.</li>
+          <li><strong>Concat</strong> performs channel-wise concatenation between tensors with matching 2D shapes, implemented using <code>torch.cat()</code>.</li>
+        </ol>
+
+
       </article>
 
       <!-- 1.2: Noising process viz -->
@@ -975,14 +990,10 @@
         </div>
         <p>
           I visualize how the digits change as <code>σ</code> increases over the set
-          <code>σ ∈ {0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0}</code>.
+          <code>σ ∈ {0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0}</code>. One can see that the bigger the noise,
+          the less legible the digit becomes.
         </p>
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>A visualization of the noising process over MNIST for multiple <code>σ</code> values. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Brief note on how noise level affects recognizability of digits. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
 
         <div class="gallery stack" data-group="b1-2-noise">
           <figure>
@@ -996,16 +1007,9 @@
       <article class="card" id="b1-2-1">
         <h2>1.2.1 — Training the UNet Denoiser</h2>
         <p>
-          I train the UNet denoiser on noisy MNIST digits using the Adam optimizer and a 5-epoch schedule (batch size 256),
+          I train the UNet denoiser on noisy (σ = 0.5) MNIST digits using the Adam optimizer and a 5-epoch schedule (batch size 256),
           following the Part B specification. Each batch is noised on the fly so the network sees fresh perturbations every epoch.
         </p>
-
-        <h3>Deliverables</h3>
-        <ul>
-          <li>A training loss curve plot (denoiser on MNIST with σ = 0.5) over the full training process. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sample denoising results on the test set at noise level σ = 0.5 after the 1st epoch. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sample denoising results on the test set at noise level σ = 0.5 after the 5th epoch. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
 
         <div class="gallery stack" data-group="b1-2-1-training">
           <figure>
@@ -1023,8 +1027,9 @@
       <article class="card" id="b1-2-2">
         <h2>1.2.2 — Out-of-Distribution Noise Levels</h2>
         <p>
-          The denoiser is trained specifically at σ = 0.5. Here I probe how well it generalizes to noise levels it has never
-          seen during training by applying it to test digits with different σ values.
+          The denoiser is trained specifically at σ = 0.5. The model generalizes worse and worse as the noise level increases.
+          The model is able to denoise the digits when the noise level is close to the training noise level, but when the noise level is
+          too high, the model is not able to denoise the digits nearly as well.
         </p>
 
         <h3>Deliverables</h3>
@@ -1049,14 +1054,12 @@
           directly to clean MNIST digits <code>x</code>. This uses the same architecture and loss, but the input no longer
           contains any recognizable structure.
         </p>
-
-        <h3>Deliverables</h3>
-        <ul>
-          <li>A training loss curve plot for the denoiser that takes pure noise as input. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sample outputs from pure noise after 1 epoch of training. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sample outputs from pure noise after 5 epochs of training. <span class="placeholder-inline">[TODO]</span></li>
-          <li>A brief discussion of the patterns that emerge and how they relate to averaging over many training digits (centroid-like behavior). <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
+        <p>
+          One can see that the pattern of the digits is such that the digit looks like a combinatino of 0, 3, and 8. 
+          This is because the model is able to learn the pattern of the digits, but is not able to learn the individual digits.
+          Hence, to minimize the loss, the model will guess a pattern that is in the middle, and that happens to be something like a 
+          combination of 0, 3, and 8. TLDR: the blob in the center is what the model is learning and hend predicting.
+        </p>
 
         <div class="gallery stack" data-group="b1-2-3-pure">
           <figure>
@@ -1090,19 +1093,22 @@
         <p>
           I extend the UNet with fully-connected conditioning blocks (FCBlocks) that embed the scalar timestep <code>t</code>,
           and inject this conditioning into the unflatten and upsampling layers via multiplicative modulation as suggested
-          in the handout.
+          in the project specs.
         </p>
-
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Implementation of FCBlocks and time-conditioning in the UNet (following the provided diagram). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Short description of where <code>t</code> is injected (unflatten, upsampling) and how it changes the activations. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
 
         <div class="gallery stack" data-group="b2-1-time">
           <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>Sketch or pseudo-code showing time-conditioned UNet data flow. [TODO]</figcaption>
+            <img src="media/conditional_arch_fm.png" alt="Time-conditioned UNet data flow">
+            <figcaption>Conditioned UNet Architecture</figcaption>
+          </figure>
+        </div>
+        <p>
+          And here is the logic for the FCBolck.
+        </p>
+        <div class="gallery stack" data-group="b2-1-fcb">
+          <figure>
+            <img src="media/fc_long.png" alt="FCBlock for time-conditioned UNet">
+            <figcaption>FCBlock for time-conditioned UNet</figcaption>
           </figure>
         </div>
       </article>
@@ -1119,13 +1125,16 @@
         <p>
           Each batch samples a random clean digit <code>x₁</code>, a random noise sample <code>x₀ ~ N(0, I)</code>, and a
           random timestep <code>t ~ U[0,1]</code>. I use batch size 64, Adam with learning rate 1e-2, and an exponential
-          LR scheduler as described in the handout.
+          LR scheduler as described in the project specs.
         </p>
+        
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>A training loss curve plot for the time-conditioned UNet across the full training schedule. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
+        <div class="gallery stack" data-group="b2-2-algo">
+          <figure>
+            <img src="media/algo1_t_only_fm.png" alt="Algorithm 1 for time-conditioned UNet">
+            <figcaption>Algorithm 1 for Training time-conditioned UNet</figcaption>
+          </figure>
+        </div>
 
         <div class="gallery stack" data-group="b2-2-train">
           <figure>
@@ -1139,17 +1148,17 @@
       <article class="card" id="b2-3">
         <h2>2.3 — Sampling from the Time-Conditioned UNet</h2>
         <p>
-          Using Algorithm 2 from the handout, I generate digits by starting from pure noise and stepping along
+          Using Algorithm 2 from the project specs, I generate digits by starting from pure noise and stepping along
           the learned flow field according to a discretized time schedule. The digits are not perfect, but become legible
           as training progresses.
         </p>
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Sampling results from the time-conditioned UNet after 1 epoch of training. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sampling results from the time-conditioned UNet after 5 epochs. <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sampling results after 10 epochs. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
+        <div class="gallery stack" data-group="b2-3-algo">
+          <figure>
+            <img src="media/algo2_t_only_fm.png" alt="Algorithm 2 for time-conditioned UNet">
+            <figcaption>Algorithm 2 for Sampling from time-conditioned UNet</figcaption>
+          </figure>
+        </div>
 
         <div class="gallery stack" data-group="b2-3-samples">
           <figure>
@@ -1176,19 +1185,6 @@
           I also implement classifier-free guidance by randomly dropping the class embedding with probability
           <code>p<sub>uncond</sub> = 0.1</code>.
         </p>
-
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Implementation of class-conditioning (extra FCBlocks, one-hot labels, random dropping). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Short explanation of how class-conditioning changes the unflatten and upsampling modulations. <span class="placeholder-inline">[TODO]</span></li>
-        </ul>
-
-        <div class="gallery stack" data-group="b2-4-class">
-          <figure class="placeholder-figure">
-            <div class="placeholder-box"></div>
-            <figcaption>Diagram or pseudo-code for joint time + class conditioning. [TODO]</figcaption>
-          </figure>
-        </div>
       </article>
 
       <!-- 2.5: Training class-conditioned UNet -->
@@ -1205,6 +1201,13 @@
           <li>A training loss curve plot for the class-conditioned UNet over its full training schedule. <span class="placeholder-inline">[TODO]</span></li>
         </ul>
 
+        <div class="gallery stack" data-group="b2-5-algo">
+          <figure>
+            <img src="media/algo3_c_fm.png" alt="Algorithm 3 for class-conditioned UNet">
+            <figcaption>Algorithm 3 for Training class-conditioned UNet</figcaption>
+          </figure>
+        </div>
+
         <div class="gallery stack" data-group="b2-5-train">
           <figure>
             <img src="media/part_b_2/2.5_loss.png" alt="Training loss curve for class-conditioned flow matching UNet">
@@ -1217,21 +1220,23 @@
       <article class="card" id="b2-6">
         <h2>2.6 — Class-Conditional Sampling with Guidance</h2>
         <p>
-          Finally, I sample digits from the class-conditioned UNet using classifier-free guidance with guidance scale
+          Finally, I sample digits (algorithm 4) from the class-conditioned UNet using classifier-free guidance with guidance scale
           <code>γ = 5.0</code>. For each class, I generate multiple samples and compare convergence speed and quality to
           the time-only model.
         </p>
 
-        <h3>Deliverables</h3>
-        <ul>
-          <li>Sampling results from the class-conditioned UNet for 1 epoch of training (4 samples per class 0–9). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sampling results for 5 epochs (4 samples per class). <span class="placeholder-inline">[TODO]</span></li>
-          <li>Sampling results for 10 epochs (4 samples per class). <span class="placeholder-inline">[TODO]</span></li>
-          <li>
-            Additional run without the exponential LR scheduler: samples after training and a short description of how you
-            adjusted hyperparameters (e.g., lower LR, more epochs) to maintain performance without a scheduler. <span class="placeholder-inline">[TODO]</span>
-          </li>
-        </ul>
+        <p>
+          To remove the scheduler, I set the learning rate to 1e-4, which is smaller than the initial 1e-2. Since the scheduler's job 
+          is to decrease the learning rate over time, removing it means the learning rate is constant. This means we have to mitigate this 
+          effect by starting with a smaller learning rate (to ensure we converge to a good result).
+        </p>
+
+        <div class="gallery stack" data-group="b2-6-algo">
+          <figure>
+            <img src="media/algo4_c_fm.png" alt="Algorithm 4 for Class-Conditional Sampling with Guidance">
+            <figcaption>Algorithm 4 for Class-Conditional Sampling with Guidance</figcaption>
+          </figure>
+        </div>
 
         <div class="gallery stack" data-group="b2-6-samples">
           <h4>With Exponential LR Scheduler</h4>

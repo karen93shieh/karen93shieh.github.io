@@ -9,13 +9,14 @@ redirect_from:
 
 About Me
 ------
-I am a Berkeley CS/DS undergraduate with a research focus on computer security. I am motivated by the gap between rapidly evolving software systems and the limited tools we have for reasoning about their security, and I want my work to make it easier for engineers to ship fast without shipping vulnerabilities. Right now I am especially interested in techniques that detect security flaws introduced by code changes, so that regressions and risky patches can be caught automatically during development.
+I am an M.S. student in Electrical Engineering and Computer Sciences at UC Berkeley, where I also earned a B.A. in Computer Science and a B.A. in Data Science in 2026. My research focus is computer security. I am motivated by the gap between rapidly evolving software systems and the limited tools we have for reasoning about their security, and I want my work to make it easier for engineers to ship fast without shipping vulnerabilities. Right now I am especially interested in techniques that detect security flaws introduced by code changes, so that regressions and risky patches can be caught automatically during development.
 
 Research
 ------
 My research centers on security, automation, and machine learning for software security and systems.
 
 - **LLM-driven fuzzing (SeedAiChemy)**: I worked on using large language models to generate higher-quality seed corpora for fuzzers, improving coverage and bug-finding effectiveness compared to traditional seed selection. This includes designing prompts that steer the model toward diverse, semantically meaningful inputs.
+- **Trustworthy agentic vulnerability discovery (RECEIPT)**: LLM coding agents can uncover XSS by pairing source-level reasoning with interactive testing, but they hallucinate and can satisfy a verifier without ever producing an attacker-reproducible exploit. RECEIPT makes their findings trustworthy by isolating verification from the agent, constraining each proof-of-concept to a remote attacker script plus a fixed vocabulary of victim browser actions, and binding the verdict to a single-use execution sentinel that must fire in the victim's browser. Across 95 real-world applications it confirmed 30 findings at 100% precision, 24 of them previously unknown.
 - **Code-change vulnerability detection**: I am studying methods for flagging security-relevant changes in code diffs, with the goal of providing reviewers with targeted warnings about potentially dangerous edits before they are merged.
 - **Log rules and anomaly detection**: I am exploring rule-learning and ML-based approaches for automatically deriving invariants from system logs, then using them to surface suspicious or rare behaviors in production.
 - **Robotics for surgery**: I contributed to work on autonomous double-knot tying for surgical sutures, developing perception and control pipelines so a robot can tie secure, reliable knots with minimal human supervision (IROS 2025).
@@ -24,6 +25,7 @@ My research centers on security, automation, and machine learning for software s
 
 Publications
 ------
+- **RECEIPT: Deterministic, Reward-Hacking-Resistant Verification for White-Box Agentic XSS Discovery (arXiv preprint, 2026)** – [arXiv](https://arxiv.org/abs/2607.18575)
 - **SeedAiChemy: LLM-driven seed corpus generation for fuzzing (LLM4SEC)** – [paper](https://people.eecs.berkeley.edu/~daw/papers/seedaichemy.pdf)
 - **Autonomous double-knot tying for surgical sutures (IROS 2025)** – [paper](https://autolab.berkeley.edu/assets/publications/media/IROS2025_Knot_Tying_final.pdf)
 - **Estuary: low-latency real-time socially interactive agents (CHI 2025)** – [arXiv](https://arxiv.org/abs/2504.14427)
@@ -58,7 +60,7 @@ My coursework spans foundations, systems, machine learning, and security:
 
 Academics
 ------
-I maintain a 4.0 GPA at Berkeley and actively seek out advanced, conceptually challenging courses. I am particularly drawn to classes that combine theory with hands-on systems work, where I can apply ideas to real software and data.
+I graduated from Berkeley with a 4.0 GPA and continue to seek out advanced, conceptually challenging courses. I am particularly drawn to classes that combine theory with hands-on systems work, where I can apply ideas to real software and data.
 
 Research Philosophy
 ------

@@ -13,7 +13,11 @@ redirect_from:
 
 Education
 ======
-- **University of California, Berkeley**  
+- **University of California, Berkeley** · *Aug. 2026 – Expected May 2027*  
+  M.S. in Electrical Engineering and Computer Sciences  
+  **Research interests:** computer security, systems, and security log analysis
+
+- **University of California, Berkeley** · *Aug. 2022 – May 2026*  
   B.A. in Computer Science, B.A. in Data Science · Regents’ and Chancellor’s Scholar · 4.00 GPA  
   **Related coursework:** Structure and Interpretation of Computer Programs; Data Structures; Discrete Mathematics and Probability Theory; Principles & Techniques of Data Science; Efficient Algorithms and Intractable Problems; Machine Structures; Introduction to Machine Learning; Optimization Models in Engineering; Computer Security; Designing/Visualizing/Understanding Deep Neural Networks; Operating Systems and System Programming; Natural Language Processing; Intro to Computer Vision and Computational Photography  
   **Awards and Honors:** Regents’ and Chancellor’s Scholar; EECS Honors
